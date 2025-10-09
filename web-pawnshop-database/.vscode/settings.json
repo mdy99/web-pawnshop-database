@@ -66,6 +66,6 @@
   "explorer.fileNesting.patterns": {
     "*.sln": "*.csproj"
   },
-  "dotnet.defaultSolution": "web-pawnshop-database.sln",
-  "cSpell.words": ["Behaviour", "Lerp", "Mathf"]
+  "dotnet.defaultSolution": "web-pawnshop-database.slnx",
+  "cSpell.words": ["Behaviour", "Lerp", "Mathf", "ScriptableObject"]
 }
