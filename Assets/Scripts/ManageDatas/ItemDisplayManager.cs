@@ -49,64 +49,71 @@ public class ItemDisplayManager : MonoBehaviour
         ActivateDisplayedItem(posKey, itemDisplayMap[posKey]); // 정보 업데이트
     }
 
-    private void ActivateDisplayedItem(int posKey, DisplayedItemData dData)
+    public void AddDisplayedItem(int posKey, DisplayedItemData dData)
+    {
+        itemDisplayMap.Add(posKey,dData);
+        ActivateDisplayedItem(posKey,dData);
+        itemActionManager.SetItemActionPanel();
+    }
+
+    public void ActivateDisplayedItem(int posKey, DisplayedItemData dData)
+    {
+        // 아이템 이미지 채우기
+        iData = SingletonManager.Instance?.GetItemCatalog(dData.itemCatalogKey);
+        displayObjectMap[posKey].transform.GetChild(1).GetComponent<Image>().sprite=Resources.Load<Sprite>($"IMG_ITEM_CATALOG/{iData.imgId}");
+        displayObjectMap[posKey].transform.GetChild(1).GetComponent<Image>();
+        switch (dData.itemState)
         {
-            // 아이템 이미지 채우기
-            iData = SingletonManager.Instance?.GetItemCatalog(dData.itemCatalogKey);
-            displayObjectMap[posKey].transform.GetChild(1).GetComponent<Image>().sprite=Resources.Load<Sprite>($"IMG_ITEM_CATALOG/{iData.imgId}");
-            displayObjectMap[posKey].transform.GetChild(1).GetComponent<Image>();
-            switch (dData.itemState)
-            {
-                case ItemState.OnDisplay:
-                case ItemState.Sold:
-                case ItemState.Created:
-                case ItemState.AfterRestoration:
-                    displayObjectMap[posKey].transform.GetChild(2).gameObject.SetActive(false);
-                    break;
-                case ItemState.UnderRestoration:
-                    displayObjectMap[posKey].transform.GetChild(2).gameObject.SetActive(true);
-                    displayObjectMap[posKey].transform.GetChild(2).GetChild(0).GetComponent<TMP_Text>().text=
-                        "수리 중";
-                    break;
-                case ItemState.OnAuction:
-                    displayObjectMap[posKey].transform.GetChild(2).gameObject.SetActive(true);
-                    displayObjectMap[posKey].transform.GetChild(2).GetChild(0).GetComponent<TMP_Text>().text=
-                        "경매 중";
-                    break;
-            }
-            // 아이템 무슨 상태인지 채우기
-
-            // 디스플레이 아이템 정보 패널도 채우기
-                // TODO: 값 채우기
-                string foundAuth="";
-                switch (dData.foundAuthenticity)
-                {
-                    case -1:
-                        foundAuth = "미발견";
-                        break;
-                    case 0:
-                        foundAuth = "가품";
-                        break;
-                    case 1:
-                        foundAuth = "진품";
-                        break;
-                }        
-
-            string displayText =$"{iData.itemCatalogName}: [{iData.categoryName}]\n\n"+ // 아이템 이름
-                        $"최초 제시가: {dData.askingPrice}\n"+
-                        $"구매가: {string.Format("{0:#,0}",dData.purchasePrice)} G\n"+
-                        $"감정가: {string.Format("{0:#,0}",dData.appraisedPrice)}\n"+
-                        $"구매일: {string.Format("{0:#,0}",dData.boughtDate)}\n"+
-                        $"판매자: {dData.sellerName}\n"+
-                        $"찾은 흠 개수: {dData.foundFlawEa}\n"+
-                        $"찾은 등급: "+dData.foundGrade.ToString()+"\n"+
-                        $"찾은 진위 여부: {foundAuth}";
-
-            displayObjectMap[posKey].transform.parent.GetChild(8+posKey).GetChild(1).GetComponent<TMP_Text>().text = displayText;
-            
-            // 활성화
-            displayObjectMap[posKey].SetActive(true);
+            case ItemState.OnDisplay:
+            case ItemState.Sold:
+            case ItemState.Created:
+            case ItemState.AfterRestoration:
+                displayObjectMap[posKey].transform.GetChild(2).gameObject.SetActive(false);
+                break;
+            case ItemState.UnderRestoration:
+                displayObjectMap[posKey].transform.GetChild(2).gameObject.SetActive(true);
+                displayObjectMap[posKey].transform.GetChild(2).GetChild(0).GetComponent<TMP_Text>().text=
+                    "수리 중";
+                break;
+            case ItemState.OnAuction:
+                displayObjectMap[posKey].transform.GetChild(2).gameObject.SetActive(true);
+                displayObjectMap[posKey].transform.GetChild(2).GetChild(0).GetComponent<TMP_Text>().text=
+                    "경매 중";
+                break;
         }
+        // 아이템 무슨 상태인지 채우기
+
+        // 디스플레이 아이템 정보 패널도 채우기
+            // 값 채우기
+            string foundAuth="";
+            switch (dData.foundAuthenticity)
+            {
+                case -1:
+                    foundAuth = "미발견";
+                    break;
+                case 0:
+                    foundAuth = "가품";
+                    break;
+                case 1:
+                    foundAuth = "진품";
+                    break;
+            }        
+
+        string displayText =$"{iData.itemCatalogName}: [{iData.categoryName}]\n\n"+ // 아이템 이름
+                    $"최초 제시가: {dData.askingPrice}\n"+
+                    $"구매가: {string.Format("{0:#,0}",dData.purchasePrice)} G\n"+
+                    $"감정가: {string.Format("{0:#,0}",dData.appraisedPrice)}\n"+
+                    $"구매일: {string.Format("{0:#,0}",dData.boughtDate)}\n"+
+                    $"판매자: {dData.sellerName}\n"+
+                    $"찾은 흠 개수: {dData.foundFlawEa}\n"+
+                    $"찾은 등급: "+dData.foundGrade.ToString()+"\n"+
+                    $"찾은 진위 여부: {foundAuth}";
+
+        displayObjectMap[posKey].transform.parent.GetChild(8+posKey).GetChild(1).GetComponent<TMP_Text>().text = displayText;
+        
+        // 활성화
+        displayObjectMap[posKey].SetActive(true);
+    }
 
     public void PopupDisplayedItemInformPanel(int posKey)
     {

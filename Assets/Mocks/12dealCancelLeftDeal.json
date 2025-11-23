@@ -1,0 +1,24 @@
+{
+    "isGameOvered": "N",  
+    "isDayNext" : "N",  
+    "dayNext":{
+        "dayCount": 2,
+        "leftMoney": 48000,
+        "personalDebt": 500000,
+        "pawnshopDebt": 45000
+    },
+    "dayFinalize":{
+        "startMoney": 50000,
+	    "todayEndMoney": 60000,
+        "interest": -5000,
+        "weeklyInterest": -1500, 
+        "finalMoney": 48000
+    },
+     "worldRecord": {
+        "playerId": "string",
+        "nickname": "PawnMaster",
+        "pawnshopName": "Elite Pawns",
+         "gameEndDatyCount": 57,
+         "gameEndDate": "2024-01-15T10:00:00Z"
+    }
+}

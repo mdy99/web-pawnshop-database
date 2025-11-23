@@ -5,6 +5,8 @@ using UnityEditor.Build.Content;
 using TMPro;
 using AYellowpaper.SerializedCollections;
 using Unity.VisualScripting;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public enum LoginState
 {
@@ -22,6 +24,8 @@ public enum ResponseCode
 
 public class LoginManager : MonoBehaviour
 {
+    private static LoginManager instance = null;
+
     [SerializeField] private GameObject LoginResisterObjs;
     [SerializeField] private GameObject worldRecordPanel;
 
@@ -36,6 +40,19 @@ public class LoginManager : MonoBehaviour
     private TMP_Text loginPwTMP;
     private TMP_Text RegisterIdTMP;
     private TMP_Text RegisterPwTMP;
+
+    void Awake()
+    {
+        if(null == instance)
+        {
+            instance = this;
+            DontDestroyOnLoad(this.gameObject);
+        }
+        else
+        {
+            Destroy(this.gameObject);
+        }
+    }
 
     void Start() // 게임 시작할 때
     {
@@ -100,10 +117,11 @@ public class LoginManager : MonoBehaviour
         {
             // 로그인 초기화
             playerIdCache =requestData.playerId; // 아이디는 캐시에 저장
-            loginIdTMP.text = "";
-            loginPwTMP.text = "";
-            RegisterIdTMP.text = "";
-            RegisterPwTMP.text = "";
+            loginIdTMP.text = null;
+            loginPwTMP.text = null;
+            RegisterIdTMP.text = null;
+            RegisterPwTMP.text = null;
+            inLoginObjs.transform.GetChild(4).GetComponent<TMP_Text>().text = playerIdCache;
             // 트랜스미션에 세션토큰 전달
             TransmissionManager.Instance.SetSessionToken(responseData.sessionToken);
             // 게임 세션 있는지 전달
@@ -124,6 +142,45 @@ public class LoginManager : MonoBehaviour
             string log = "로그인 실패.\nID와 PW를 잘 확인해보세요";
             ConfirmPopuper.Instance?.PopupCheckPanel(log);  
         }
+    }
+
+    void OnEnable()
+    {
+        SceneManager.sceneLoaded += SetLoginScreen;
+    }
+
+    void SetLoginScreen(Scene scene, LoadSceneMode mode)
+    {
+        if(SceneManager.GetActiveScene().name != "StartScene")
+        { // 스타트 씬에서만 작동
+            return;
+        }
+        if(loginState == LoginState.IN_LOGIN)
+        {
+            // 오브젝트들도 다시 받아오기
+            Canvas mainCanvas = FindFirstObjectByType<Canvas>();
+            LoginResisterObjs = mainCanvas.transform.GetChild(2).GetChild(1).gameObject;
+            inLoginObjs = mainCanvas.transform.GetChild(2).GetChild(2).gameObject;
+            worldRecordPanel = mainCanvas.transform.GetChild(3).gameObject;
+            // 버튼에도 다시 넣어줘야 함
+            LoginResisterObjs.transform.GetChild(0).GetChild(4).GetComponent<Button>().onClick.AddListener(RequestToLogin);
+            LoginResisterObjs.transform.GetChild(1).GetChild(4).GetComponent<Button>().onClick.AddListener(RequestToRegister);
+            inLoginObjs.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(RequestToLogOut);
+            inLoginObjs.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(OpenWorldRecord);
+            worldRecordPanel.transform.GetChild(3).GetComponent<Button>().onClick.AddListener(CloseWorldRecord);
+            // 세계 기록도 변했을 수 있으니 다시 받아오기
+            LoadWorldRecord(); // 세계 기록 미리 불러오기
+            // 아이디 최신화. 혹시 모르니
+            inLoginObjs.transform.GetChild(4).GetComponent<TMP_Text>().text = playerIdCache;
+            // 패널 활성화 세팅
+            LoginResisterObjs.SetActive(false);
+            inLoginObjs.SetActive(true);
+        }
+    }
+
+    void OnDisable()
+    {
+        SceneManager.sceneLoaded -= SetLoginScreen;
     }
 
     public void RequestToRegister()
@@ -176,10 +233,10 @@ public class LoginManager : MonoBehaviour
                 = worldRecordsData.worldRecords[i].pawnshopName;
             // DayCount
             wrldRecordRow.transform.GetChild(8).GetComponent<TMP_Text>().text
-                = $"{string.Format("{0:#,0}",worldRecordsData.worldRecords[i].clearDayCount)} 일";
+                = $"{string.Format("{0:#,0}",worldRecordsData.worldRecords[i].gameEndDayCount)} 일";
             // Date
             wrldRecordRow.transform.GetChild(9).GetComponent<TMP_Text>().text
-                = worldRecordsData.worldRecords[i].clearDate;
+                = worldRecordsData.worldRecords[i].gameEndDate;
         }
     }
 

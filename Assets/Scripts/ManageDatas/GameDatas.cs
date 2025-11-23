@@ -163,7 +163,7 @@ public class NewsWrapData
 
 // ======================================================
 // 고객 정보 공개
-// PATCH /customer/reveal (POST 대체 가능)
+// PATCH /customer/reveal
 // ======================================================
 [System.Serializable]
 public class RevealCustomerRequest
@@ -263,8 +263,24 @@ public class DealCompleteRequest
 [System.Serializable]
 public class DealCompleteResponse
 {
+    public string dealSuccess; // "Y", "N"
     public int leftMoney;
     public DisplayedItemData displayedItem;
+    public string isGameOvered; // "Y" | "N" // 아직 게임 진행 중이면 N
+    public string isDayNext; //  "Y" | "N" // 아직 거래가 남았으면, N.
+    public DayNextData dayNext; // 다음 날 넘어가는 정보들
+    public DayFinalizeData dayFinalize; // 정산 정보
+    public WorldRecordData worldRecord; // 게임 종료 정보
+}
+
+[System.Serializable]
+public class DenyDealResponse
+{
+    public string isGameOvered; // "Y" | "N" // 아직 게임 진행 중이면 N
+    public string isDayNext; //  "Y" | "N" // 아직 거래가 남았으면, N.
+    public DayNextData dayNext; // 다음 날 넘어가는 정보들
+    public DayFinalizeData dayFinalize; // 정산 정보
+    public WorldRecordData worldRecord; // 게임 종료 정보
 }
 
 // ======================================================
@@ -351,6 +367,8 @@ public class LoanUpdateResponse
     public string debtType;
     public int leftDebtAmount;
     public int leftMoney;
+    public string isGameCleared; // 게임 클리어 여부 "Y" , "N"
+    public WorldRecordData worldRecord; // 게임 종료 기록
 }
 
 // ======================================================
@@ -358,36 +376,22 @@ public class LoanUpdateResponse
 // POST /day/next
 // ======================================================
 [System.Serializable]
-public class DailyTransactionSummary
+public class DayFinalizeData
 {
     public int startMoney;
-    public int boughtSum;
-    public int soldSum;
+    public int todayEndMoney;
     public int interest;
     public int weeklyInterest;
     public int finalMoney;
 }
 
 [System.Serializable]
-public class DayNextResponse
+public class DayNextData
 {
     public int dayCount;
     public int leftMoney;
     public int personalDebt;
     public int pawnshopDebt;
-    public DailyTransactionSummary dailyTransactionSummary;
-}
-// ======================================================
-// 게임 끝 확인
-// POST /game/checkEnd
-// ======================================================
-
-[System.Serializable]
-public class GameCheckEndResponse
-{
-    public bool isGameEnded; // true: 게임 종료, false: 계속 진행
-    public bool isGameOvered; // true: 파산으로 게임 오버. false: 성공적으로 게임 클리어
-    public WorldRecordData worldRecord;
 }
 
 // ======================================================
@@ -400,8 +404,8 @@ public class WorldRecordData
     public string playerId;
     public string nickname;
     public string pawnshopName;
-    public int clearDayCount;
-    public string clearDate;
+    public int gameEndDayCount;
+    public string gameEndDate;
 }
 
 [System.Serializable]

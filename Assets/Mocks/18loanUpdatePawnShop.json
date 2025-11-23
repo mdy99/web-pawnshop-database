@@ -1,0 +1,13 @@
+{
+  "debtType": "PAWNSHOP",
+  "leftDebtAmount": 400000,
+  "leftMoney": 60000,
+  "isGameCleared": "N",
+  "worldRecord": {
+      "playerId": "string",
+      "nickname": "PawnMaster",
+      "pawnshopName": "Elite Pawns",
+      "gameEndDatyCount": 57,
+      "gameEndDate": "2024-01-15T10:00:00Z"
+  }
+}

@@ -16,7 +16,6 @@ public class ItemActionManager : MonoBehaviour
     List<DisplayedItemData> actionItemList;
     private DisplayedItemData currentClickedItem;
 
-
     public void OnActionItemClicked(bool isOn, int itemIndex){
         if(isOn){
             currentClickedItem = actionItemList[itemIndex];
@@ -50,6 +49,11 @@ public class ItemActionManager : MonoBehaviour
         displayManager.SetItemState(currentClickedItem.displayPositionKey, responseData.itemState);
         
         // 여기 아이템액션 매니저의 창도 업데이트
+        OnItemActionTogClicked(itemActionTog.transform.GetChild(0).GetComponent<Toggle>().isOn);
+    }
+
+    public void SetItemActionPanel()
+    {
         OnItemActionTogClicked(itemActionTog.transform.GetChild(0).GetComponent<Toggle>().isOn);
     }
 

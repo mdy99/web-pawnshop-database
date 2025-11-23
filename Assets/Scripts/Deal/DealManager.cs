@@ -5,6 +5,8 @@ using UnityEditor;
 using TMPro;
 using Unity.VisualScripting;
 using System.Net.Http;
+using System.Linq;
+using UnityEngine.SceneManagement;
 
 public enum GradeActionType
 {
@@ -32,11 +34,10 @@ public class DealManager : MonoBehaviour
 
     [SerializeField] private GameObject sellObjs;
 
-    [SerializeField] private GameObject itemDisplayManager;
+    [SerializeField] private ItemDisplayManager itemDisplayManager;
 
 
-    [SerializedDictionary("order","DealData")] // 얘는 데이터 저장용 dict
-    public SerializedDictionary<int, DealData> dailyDealsMap = new SerializedDictionary<int, DealData>();
+    [SerializeField] private List<DealData> dailyDealsList = new List<DealData>();
 
     private int flawChangedPurchasePrice=-999;
     private int flawChangedAppraisedPrice=-999;
@@ -67,29 +68,50 @@ public class DealManager : MonoBehaviour
     private FlawActionType currnetFlawActionType = FlawActionType.LOW;
 
     [SerializeField] private GameSessionManager gameSessionManager;
+    [SerializeField] private GameObject GameEndObjs;
+    [SerializeField] private GameObject FinalizeObjs;
 
+    private DealCompleteResponse dealCompleteResponseData = null;
 
     void Start()
     {
-        dealObjs.transform.GetChild(3).GetChild(0).GetComponent<Button>().onClick.AddListener(DecideDeal);
-        dealObjs.transform.GetChild(4).GetChild(0).GetComponent<Button>().onClick.AddListener(DenyDeal);
-        displaysMap = itemDisplayManager.GetComponent<ItemDisplayManager>().GetItemDisplayMap();
+        // 전시장 아이템 불러오기
+        displaysMap = itemDisplayManager.GetItemDisplayMap();
+        StartToday();
+    }
 
-        // 테스트용 코드
+    private void StartToday()
+    {
+        // TODO: 오늘의 뉴스 이벤트 불러오기
+        //      tv에서 띄우는 것만 변경하면 됨
+        // TODO: 오늘 복원/경매 완료 된 것들 불러오기
+        //      팝업창
+        //      게임 오버 처리
+        //      복원/경매 완료된 것들 처리(displayManager에서 삭제 등등)
+        // 오늘 거래 불러오기
+        RequestDailyDeals();
+    }
+
+
+    private void RequestDailyDeals()
+    {
+        // 실제 데이터 받는 코드        
+        // DailyDealsWrapData responseData =TransmissionManager.Instance.RequestToServer<int,DailyDealsWrapData>(RequestType.DAILY_DEALS,0);
+        // 테스트용 코드 <<<<<<<<<<<<<<<<<<
         TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/10generateDailyDeals.json", typeof(TextAsset));
         DailyDealsWrapData dailyDealsWrapData =JsonUtility.FromJson<DailyDealsWrapData>(jsonFile.text);
+        // 받은 데이터로 오늘 데이터 세팅
         InitDailyDeals(dailyDealsWrapData.dailyDeals);
-        //SetNextDaySetting();
     }
 
     public void InitDailyDeals(List<DealData> dailyDeals)
     {
-        for(int i = 0; i < 3; i++)
+        for(int i = 0; i < dailyDeals.Count; i++)
         {
-            dailyDealsMap.Add(i,dailyDeals[i]);
+            dailyDealsList.Add(dailyDeals[i]);
         }
         currentDealIndex = 0;
-        SetDealPanelToNewData(dailyDealsMap[currentDealIndex]); // 최초 거래로 설정해둠
+        SetDealPanelToNewData(dailyDealsList[currentDealIndex]); // 최초 거래로 설정해둠
     }
 
     public void SetDealPanelToNewData(DealData dData)
@@ -187,7 +209,7 @@ public class DealManager : MonoBehaviour
     {
       // 요청하고 결과 받기
         DealActionRequest requestData = new DealActionRequest();
-        requestData.drcKey = dailyDealsMap[currentDealIndex].drcKey;
+        requestData.drcKey = dailyDealsList[currentDealIndex].drcKey;
         requestData.actionType = "APPRAISE";
         switch (currentGradeActionType)
         {
@@ -228,7 +250,7 @@ public class DealManager : MonoBehaviour
     {
         // 요청하고 결과 받기
         DealActionRequest requestData = new DealActionRequest();
-        requestData.drcKey = dailyDealsMap[currentDealIndex].drcKey;
+        requestData.drcKey = dailyDealsList[currentDealIndex].drcKey;
         requestData.actionType = "FINDFLAW";
         switch (currnetFlawActionType)
         {
@@ -269,7 +291,7 @@ public class DealManager : MonoBehaviour
     {
         // 요청하고 결과 받기
         DealActionRequest requestData = new DealActionRequest();
-        requestData.drcKey = dailyDealsMap[currentDealIndex].drcKey;
+        requestData.drcKey = dailyDealsList[currentDealIndex].drcKey;
         requestData.actionType = "AUTHCHECK";
         requestData.actionLevel = 0;
 
@@ -298,17 +320,65 @@ public class DealManager : MonoBehaviour
 
     public void OpenItemHint(int posKey)
     {
-        // TODO: 아이템 힌트 열람 서버에 요청
-        // 받아서 처리 -> 텍스트에 담기
+        // 아이템 힌트 요청 데이터 세팅
+        ItemHintRequest requestData = new ItemHintRequest();
+        requestData.itemKey = currentDealData.itemKey;
+
+        // 실제 데이터 요청
+        //ItemHintResponse responseData =TransmissionManager.Instance.RequestToServer<ItemHintRequest,ItemHintResponse>(RequestType.GET_ITEM_HINTS,requestData);
+        
+        // 테스트용 데이터 <<<<<<<<<<<<<<<<<
+        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/9itemHind.json", typeof(TextAsset));
+        ItemHintResponse responseData =JsonUtility.FromJson<ItemHintResponse>(jsonFile.text);
+
+        /* 받아서 처리 -> 텍스트에 담기 */
+        // 힌트 이름
+        currentItemHintObjs.transform.GetChild(posKey).GetChild(0).GetComponent<TMP_Text>().text = responseData.hintName;
+        // 힌트 값
+        currentItemHintObjs.transform.GetChild(posKey).GetChild(1).GetComponent<TMP_Text>().text = responseData.hintValue;
+        // 남은 돈 표시
+        gameSessionManager.SetLeftMoney(responseData.leftMoney); 
+
         // 아이템 힌트 버튼 SetActive(false) 때리기
         currentItemHintObjs.transform.GetChild(posKey).GetChild(2).gameObject.SetActive(false);
     }
 
     public void OpenCustomerHint(int posKey)
     {
-        // TODO: 아이템 힌트 열람 서버에 요청
-        // 받아서 처리 -> 텍스트에 담기
-        // 아이템 힌트 버튼 SetActive(false) 때리기
+        // 아이템 힌트 요청 데이터 세팅
+        RevealCustomerRequest requestData = new RevealCustomerRequest();
+        requestData.customerKey = currentDealData.customerKey;
+        switch (posKey)
+        {
+            case 0:
+                requestData.attribute = "FRAUD";
+                break;
+            case 1:
+                requestData.attribute = "WELL_COLLECT";
+                break;
+            case 2:
+                requestData.attribute = "CLUMSY";
+                break;
+        }
+
+        // 실제 데이터 요청
+        // RevealCustomerResponse responseData =TransmissionManager.Instance.RequestToServer<RevealCustomerRequest,RevealCustomerResponse>(RequestType.CUS_REVEAL,requestData);
+        
+        // 테스트용 데이터 <<<<<<<<<<<<<<<<<
+        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/8revealCustomer.json", typeof(TextAsset));
+        RevealCustomerResponse responseData =JsonUtility.FromJson<RevealCustomerResponse>(jsonFile.text);
+
+        /* 받아서 처리 -> 텍스트에 담기 */
+        // 힌트 이름
+        currentCusHintObjs.transform.GetChild(3+posKey).GetChild(0).GetComponent<TMP_Text>().text
+            = ConvertCustomerAttributeToString(responseData.attribute);
+        // 힌트 값
+        currentCusHintObjs.transform.GetChild(3+posKey).GetChild(1).GetComponent<TMP_Text>().text
+            = $"{responseData.value*100}%";
+        // 남은 돈 표시
+        gameSessionManager.SetLeftMoney(responseData.leftMoney); 
+
+        // 고객 힌트 버튼 SetActive(false) 때리기
         currentCusHintObjs.transform.GetChild(3+posKey).GetChild(2).gameObject.SetActive(false);
     }
 
@@ -330,20 +400,33 @@ public class DealManager : MonoBehaviour
         
         if (currentDealData.revealedFraud !=-1) // 사기꾼율: 이미 열람되었다면,
         {
+            // 힌트 이름
+            currentCusHintObjs.transform.GetChild(3).GetChild(0).GetComponent<TMP_Text>().text
+                = ConvertCustomerAttributeToString("FRAUD");
+            // 힌트 값
             currentCusHintObjs.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text
-                = $"{currentDealData.revealedFraud}";
-            currentCusHintObjs.transform.GetChild(3).GetChild(2).gameObject.SetActive(false);
+                = $"{currentDealData.revealedFraud*100}%";
+            // 고객 힌트 버튼 SetActive(false) 때리기
+            currentCusHintObjs.transform.GetChild(3).GetChild(2).gameObject.SetActive(false);        
         }
         if (currentDealData.revealedWellCollect !=-1) // 잘수집: 이미 열람되었다면,
         {
+            // 힌트 이름
+            currentCusHintObjs.transform.GetChild(4).GetChild(0).GetComponent<TMP_Text>().text
+                = ConvertCustomerAttributeToString("WELL_COLLECT");
+            // 힌트 값
             currentCusHintObjs.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text
-                = $"{currentDealData.revealedWellCollect}";
+                = $"{currentDealData.revealedWellCollect*100}%";
             currentCusHintObjs.transform.GetChild(4).GetChild(2).gameObject.SetActive(false);
         }
         if (currentDealData.revealedClumsy !=-1) // 서투름: 이미 열람되었다면,
         {
+            // 힌트 이름
+            currentCusHintObjs.transform.GetChild(5).GetChild(0).GetComponent<TMP_Text>().text
+                = ConvertCustomerAttributeToString("CLUMSY");
+            // 힌트 값
             currentCusHintObjs.transform.GetChild(5).GetChild(1).GetComponent<TMP_Text>().text
-                = $"{currentDealData.revealedClumsy}";
+                = $"{currentDealData.revealedClumsy*100}%";
             currentCusHintObjs.transform.GetChild(5).GetChild(2).gameObject.SetActive(false);            
         }
     }
@@ -489,7 +572,7 @@ public class DealManager : MonoBehaviour
     }
 
 
-    public void DecideToSellItem()
+    public void OnDecideToSellItem()
     {
         SellCompleteRequest requestData=null;
         requestData.itemKey = currentSellItem.itemKey;
@@ -516,13 +599,13 @@ public class DealManager : MonoBehaviour
         // 
     }
 
-    public void DenyToSellItem()
+    public void OnDenyToSellItem()
     {
         // TODO: 서버에 전달하기 Deny sell
         // TODO: 고객 상태 -> 거래 상태로 바꾸기
         SingletonManager.Instance.IsCustomerDealState = CustomerState.Deal;
         // TODO: 거래 패널 세팅하기
-        SetDealPanelToNewData(dailyDealsMap[currentDealIndex]);
+        SetDealPanelToNewData(dailyDealsList[currentDealIndex]);
         // 판매 오브젝트 끄기
         deseBlackFilter.SetActive(false);
         sellObjs.SetActive(false);
@@ -533,14 +616,29 @@ public class DealManager : MonoBehaviour
 
 
     // TODO: 서버에 요청 주는 파트들
-    // 1. 아이템 힌트 열람 -> 서버 -> json 형식으로 받아서 텍스트에 내용 다 채운 다음에 버튼 지우기
-    // 2. 흠 찾기 -> 서버 요청 주고 결과를 Update흠찾기, Update 토탈 로 처리하면 될 듯
-    // 3. 진위 여부 -> 서버 요청 주고 결과를 Update진위여부, Update 토탈 로 처리하면 될 듯
-    // 4. 감정 -> 서버 요청 주고 결과를 Update등급, Update 토탈 로 처리하면 될 듯
     // 5. 거래 성공 -> 서버에 전달하고 다음 고객, 아이템, 거래패널로 업데이트하기
     // 6. 거래 실패 -> 서버에 전달하고 다음 고객, 아이템, 거래패널로 업데이트하기
+    // 7. 판매 성공
+    // 8. 핀메 실패
 
 
+    private string ConvertCustomerAttributeToString(string attribute)
+    {
+        string strFeed = "";
+        switch (attribute)
+        {
+            case "FRAUD":
+                strFeed= "사기꾼 기질";
+                break;
+            case "WELL_COLLECT":
+                strFeed= "수집가 기질";
+                break;
+            case "CLUMSY":
+                strFeed= "대충 정리함";
+                break;
+        }
+        return strFeed;
+    }
     private string ConvertAuthToString(Authenticity authenticity)
     {
         string strFeed = "";
@@ -580,62 +678,155 @@ public class DealManager : MonoBehaviour
     }
 
 
-    private void DecideDeal()
+    public void OnDecideDeal()
     {
-        // TODO: 서버에 전달하기
-        // 딜 오브젝트 끄기
-        deseBlackFilter.SetActive(false);
-        dealObjs.SetActive(false);
-        // 
-        currentDealIndex++; // 다음 거래로 이동
-        if(currentDealIndex > 2)
+        // 서버에 요청할 데이터 세팅하기
+        DealCompleteRequest requestData =  new DealCompleteRequest();
+        requestData.itemKey = currentDealData.itemKey;
+        requestData.drcKey = currentDealData.drcKey;
+        // 서버에 요청하고 데이터 받아오기
+        // DealCompleteResponse responseData =TransmissionManager.Instance.RequestToServer<DealCompleteRequest,DealCompleteResponse>(RequestType.DEAL_COMPLETE,requestData);
+
+        // 테스트용 데이터 사용
+        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/12dealComplete.json", typeof(TextAsset));
+        DealCompleteResponse responseData =JsonUtility.FromJson<DealCompleteResponse>(jsonFile.text);
+
+        dealCompleteResponseData = responseData; // 전역변수에 저장해서 다같이 봐
+
+        // 거래 성공 시
+        if(responseData.dealSuccess =="Y")
         {
-            SetNextDaySetting();
+            // 거래 성공에 대한 클라 업데이트하기
+            // 전시장 아이템 추가
+            // 거래 다음으로 넘어가기 위해서 여기 주석처리하면 됨 <<<<<<<<<<<<<<<<<<<<
+            itemDisplayManager.AddDisplayedItem(responseData.displayedItem.displayPositionKey, responseData.displayedItem);
+            // 남은 돈 표시
+            gameSessionManager.SetLeftMoney(responseData.leftMoney); 
+
+            // 거래 창 끄기
+            deseBlackFilter.SetActive(false); 
+            dealObjs.SetActive(false);
+            // 거래 성공 확인 팝업창 띄우기
+            ConfirmPopuper.Instance.PopupCheckPanel("거래에 성공하였습니다!");
+            // 다음 거래로 이동
+            currentDealIndex++; 
+            // 다음 행동 정하기
+            if(currentDealIndex >= dailyDealsList.Count || responseData.isDayNext == "Y") // 모든 거래 다 함
+            {// 오늘 거래 다했는지 체크
+                PopupFinalizeObjs(); // 정산화면 띄우기
+            }
+            else { // 다음 거래 준비
+                SetDealPanelToNewData(dailyDealsList[currentDealIndex]);
+            }        
         }
-        else {
-            SetDealPanelToNewData(dailyDealsMap[currentDealIndex]);
+        else // 거래 성사 실패 시(돈 부족 등)
+        {
+            // 거래 실패 확인 팝업창 띄우기
+            ConfirmPopuper.Instance.PopupCheckPanel("거래에 실패하였습니다.\n남은 돈을 확인해보세요");   
+        } 
+    }
+
+    private void PopupFinalizeObjs()
+    {
+        // 정산 화면 데이터 세팅하기
+        FinalizeObjs.transform.GetChild(2).GetChild(0).GetComponent<TMP_Text>().text
+          =$"{string.Format("{0:#,0}",dealCompleteResponseData.dayFinalize.startMoney)}G";
+        FinalizeObjs.transform.GetChild(2).GetChild(1).GetComponent<TMP_Text>().text
+          =$"{string.Format("{0:#,0}",dealCompleteResponseData.dayFinalize.todayEndMoney)}G";
+        FinalizeObjs.transform.GetChild(2).GetChild(2).GetComponent<TMP_Text>().text
+          =$"{string.Format("{0:#,0}",dealCompleteResponseData.dayFinalize.interest)}G";
+        FinalizeObjs.transform.GetChild(2).GetChild(3).GetComponent<TMP_Text>().text
+          =$"{string.Format("{0:#,0}",dealCompleteResponseData.dayFinalize.weeklyInterest)}G";
+        FinalizeObjs.transform.GetChild(2).GetChild(4).GetComponent<TMP_Text>().text
+          =$"{string.Format("{0:#,0}",dealCompleteResponseData.dayFinalize.finalMoney)}G";
+        // 정산 화면 띄우기
+        FinalizeObjs.SetActive(true);
+    }
+
+    public void OnPushFinalizeConfirmButton()
+    {// 확인 버튼 누름
+        // 정산화면 비활성화
+        FinalizeObjs.SetActive(false);
+
+        // 게임오버 됐는지 체크
+        if(dealCompleteResponseData.isGameOvered == "Y")
+        { // 오버했다면, 오버 화면 띄우기
+            // 게임 오버 화면 데이터 세팅하기
+            GameEndObjs.transform.GetChild(2).GetComponent<TMP_Text>().text = "게임 오버!";
+            GameEndObjs.transform.GetChild(3).GetComponent<TMP_Text>().text = 
+                    "상환할 이자를 내지 못해 사채업자들에게 끌려갔습니다...";
+            GameObject worldRecord = GameEndObjs.transform.GetChild(4).gameObject;
+            // Nickname
+            worldRecord.transform.GetChild(1).GetComponent<TMP_Text>().text
+                = $"#{dealCompleteResponseData.worldRecord.playerId}";
+            worldRecord.transform.GetChild(6).GetComponent<TMP_Text>().text
+                = dealCompleteResponseData.worldRecord.nickname;
+            // Shopname
+            worldRecord.transform.GetChild(7).GetComponent<TMP_Text>().text
+                = dealCompleteResponseData.worldRecord.pawnshopName;
+            // DayCount
+            worldRecord.transform.GetChild(8).GetComponent<TMP_Text>().text
+                = $"{string.Format("{0:#,0}",dealCompleteResponseData.worldRecord.gameEndDayCount)} 일";
+            // Date
+            worldRecord.transform.GetChild(9).GetComponent<TMP_Text>().text
+                = dealCompleteResponseData.worldRecord.gameEndDate;
+            // 게임 오버 화면 띄우기
+            GameEndObjs.SetActive(true);
+        }
+        else
+        {// 오버하지 않았다면, 다음 날 세팅    
+            SetNextDaySetting();
         }
     }
 
-    private void DenyDeal()
+    public void OnGameEndButtonClicked()
     {
-        // TODO: 서버에 전달하기
+        // 시작 씬으로 이동
+        SceneManager.LoadScene("StartScene");
+    }
+
+    public void OnDenyDeal()
+    {
+        // 서버에 요청할 데이터 세팅하기
+        DealCompleteRequest requestData =  new DealCompleteRequest();
+        requestData.itemKey = currentDealData.itemKey;
+        requestData.drcKey = currentDealData.drcKey;
+        // 서버에 요청하고 데이터 받아오기
+
+        // TODO: 새로 바뀐 데이터 양식으로 거래 거부 - 정산 - 다음 날 처리 처리하기
+
+        int responseCode =TransmissionManager.Instance.RequestToServer<DealCompleteRequest,int>(RequestType.DEAL_CANCEL,requestData);
+        if(responseCode != 200) // 서버 처리
+        {
+            ConfirmPopuper.Instance.PopupCheckPanel("거래 거부 도중 오류가 발생하였습니다.");
+            return;
+        }
+        /* 정상 동작 시 */
         // 딜 오브젝트 끄기
         deseBlackFilter.SetActive(false);
         dealObjs.SetActive(false);
-        
+        ConfirmPopuper.Instance.PopupCheckPanel("거래를 거부하였습니다.");
         currentDealIndex++; // 다음 거래로 이동
-        if(currentDealIndex > 2)
-        { // 3개 거래 완료 했으면,
-            // TODO: 팝업창 띄우고 그냥 확인 누르면 정산 시켜
-            SetNextDaySetting();
+        // 다음 행동 정하기
+        if(currentDealIndex >= dailyDealsList.Count) // 모든 거래 다 함
+        {
+            SetNextDaySetting(); // 다음 날 세팅
         }
-        else {
-            SetDealPanelToNewData(dailyDealsMap[currentDealIndex]);
-        }
-    }
-    
-    // 정산 창 띄우기
-    private void StartSettleMoney()
-    {
-        // TODO: 정산 창 띄우기
-        // 정산 창에는 
-    }
-
-    private void StartNextDay()
-    {
-        
+        else { // 다음 거래 준비
+            SetDealPanelToNewData(dailyDealsList[currentDealIndex]);
+        }  
     }
 
     private void SetNextDaySetting()
     {
-        // TODO: 다음 날로 넘어가는 확인 팝업창 띄우기
-        string text ="오늘 모든 거래를 마쳤습니다.\n 다음 날로 넘어가기";
-        ConfirmPopuper.Instance.PopupCheckPanel(text,StartSettleMoney);
-        // TODO: 고객 비활성화
+        // 다음 날로 넘어가는 확인 팝업창 띄우기
+        string text ="다음 날로 넘어가기";
+        ConfirmPopuper.Instance.PopupCheckPanel(text);
+        // 고객 비활성화
         customerObj.SetActive(false);
-        // TODO: 아이템 비활성화
+        // 아이템 비활성화
         trayItemObj.SetActive(false);
+        StartToday();
     }
 
     public void PopupItemInform()

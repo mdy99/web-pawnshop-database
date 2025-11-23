@@ -16,7 +16,7 @@
     "itemCatalogKey": 3
   },
     "isGameOvered": "N",
-    "isDayNext" : "N",
+    "isDayNext" : "Y",
     "dayNext":{
         "dayCount": 2,
         "leftMoney": 48000,
