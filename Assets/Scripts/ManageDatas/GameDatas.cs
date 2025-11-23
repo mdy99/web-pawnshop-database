@@ -33,9 +33,9 @@ public enum Grade
 
 public enum Authenticity
 {
-    Unknown = -1,
-    Real = 1,
-    Fake = 0
+    Unknown = -1, // 미확정
+    Real = 1, // 진품
+    Fake = 0 // 가품
 }
 
 // ======================================================
@@ -130,7 +130,7 @@ public class DisplayedItemData
     public string sellerName;
     public Grade foundGrade;
     public int foundFlawEa;
-    public int authenticity; // -1=미발견,0=가짜,1=진짜
+    public int foundAuthenticity; // 1 진품 0 가품 -1 미확정
     public ItemState itemState;
     public int itemKey;
     public int itemCatalogKey;
@@ -214,7 +214,7 @@ public class DealData
     public int itemCatalogKey;
     public int foundGrade;
     public int foundFlawEa;
-    public int isAuthenticityFound;
+    public int foundAuthenticity; // 1 진품 0 가품 -1 미확정
     public int customerKey;
     public float revealedFraud; // -1 미열람, float 일반이면 열람 된거
     public float revealedWellCollect;
@@ -244,7 +244,7 @@ public class DealActionResponse
     public string changedAppraisedPriceByAction;
     public int foundGrade;
     public int foundFlawEa;
-    public int isAuthenticityFound;
+    public int foundAuthenticity; // 1 진품 0 가품 -1 미확정
     public int leftMoney;
 }
 

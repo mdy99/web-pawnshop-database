@@ -3,6 +3,6 @@
   "totalAppraisedPrice": 1400,
   "changedPurchasedPriceByAction": "-200",
   "changedAppraisedPriceByAction": "+200",
-  "isAuthenticityFound": true,
+  "foundAuthenticity": 1,
   "leftMoney": 49870
 }

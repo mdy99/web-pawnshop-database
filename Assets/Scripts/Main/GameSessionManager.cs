@@ -25,6 +25,11 @@ public class GameSessionManager : MonoBehaviour
     [SerializeField] private TMP_Text personalDebtOutput;
     [SerializeField] private TMP_Text shopDebtOutput;
     
+    public void SetLeftMoney(int leftMoney)
+    {
+        goldOutput.text =$"{string.Format("{0:#,0}",leftMoney)} G";
+    }
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start() // 시작할 때 게임 세션 받아오기

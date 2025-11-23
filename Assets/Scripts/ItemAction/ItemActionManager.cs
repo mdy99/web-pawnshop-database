@@ -41,7 +41,7 @@ public class ItemActionManager : MonoBehaviour
         Debug.Log(requestData.itemKey);
         // ItemActionResponse responseData = TransmissionManager.Instance.RequestToServer<ItemActionRequest,ItemActionResponse>(RequestType.ITEM_ACTION,requestData);
         //요청하고 결과값 받기 -> 서버 있어야 받을 수 있음
-
+        // 테스트 데이터 <<<<<<<<<<<<<<
         TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/14itemAction.json", typeof(TextAsset));
         ItemActionResponse responseData =JsonUtility.FromJson<ItemActionResponse>(jsonFile.text);
 
@@ -83,7 +83,7 @@ public class ItemActionManager : MonoBehaviour
             // 디스플레이 아이템 정보 패널도 채우기
             // 값 채우기
             string foundAuth="";
-            switch (actionItemList[i].authenticity)
+            switch (actionItemList[i].foundAuthenticity)
             {
                 case -1:
                     foundAuth = "미발견";
@@ -129,7 +129,7 @@ public class ItemActionManager : MonoBehaviour
             // 디스플레이 아이템 정보 패널도 채우기
                 // TODO: 값 채우기
                 string foundAuth="";
-                switch (actionItemList[i].authenticity)
+                switch (actionItemList[i].foundAuthenticity)
                 {
                     case -1:
                         foundAuth = "미발견";

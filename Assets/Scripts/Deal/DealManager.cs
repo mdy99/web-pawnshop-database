@@ -6,6 +6,19 @@ using TMPro;
 using Unity.VisualScripting;
 using System.Net.Http;
 
+public enum GradeActionType
+{
+    RARE,
+    UNIQUE,
+    LEGENDARY
+}
+public enum FlawActionType
+{
+    LOW,
+    MIDDLE,
+    HIGH
+}
+
 
 namespace AYellowpaper.SerializedCollections
 {
@@ -45,6 +58,15 @@ public class DealManager : MonoBehaviour
     
     private int currentDealIndex =-1;
     
+    [SerializeField] private GameObject gradeTogGroup;
+    [SerializeField] private GameObject flawTogGroup;
+    [SerializeField] private GameObject gradeActionButton;
+    [SerializeField] private GameObject flawActionButton;
+
+    private GradeActionType currentGradeActionType = GradeActionType.RARE;
+    private FlawActionType currnetFlawActionType = FlawActionType.LOW;
+
+    [SerializeField] private GameSessionManager gameSessionManager;
 
 
     void Start()
@@ -105,9 +127,12 @@ public class DealManager : MonoBehaviour
 
             // 거래 패널 데이터 할당
             UpdateChangedFlawPrice(currentDealData.foundFlawEa);
-            UpdateChangedAuthPrice((Authenticity)currentDealData.isAuthenticityFound);
+            UpdateChangedAuthPrice((Authenticity)currentDealData.foundAuthenticity);
             UpdateChangedGradePrice((Grade)currentDealData.foundGrade);
             UpdateTotalPrice(dData.purchasePrice, dData.appraisedPrice,dData.askingPrice);
+            // 토글 초기화
+            OnGradeLevelToggleClicked();
+            OnFlawLevelToggleClicked();
             // 아이템/고객 힌트 처리
             InitAlreadyRevealedCustomerHint();
             ActivateAllItemHintButton();
@@ -116,6 +141,159 @@ public class DealManager : MonoBehaviour
         {
             SetSellPanel(posKey);
         }
+    }
+
+    public void OnGradeLevelToggleClicked()
+    {
+        // 현재 토글 상태 변경하기
+        if(gradeTogGroup.transform.GetChild(0).GetComponent<Toggle>().isOn == true)
+        { // rare
+            gradeActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "20G";
+            currentGradeActionType = GradeActionType.RARE;
+        }
+        else if(gradeTogGroup.transform.GetChild(1).GetComponent<Toggle>().isOn == true)
+        { // unique
+            gradeActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "30G";            
+            currentGradeActionType = GradeActionType.UNIQUE;
+        }
+        else
+        { // legendary
+            gradeActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "50G";
+            currentGradeActionType = GradeActionType.LEGENDARY;
+        }
+    }
+
+    public void OnFlawLevelToggleClicked()
+    {
+        // TODO: 현재 토글 상태 변경하기
+        if(flawTogGroup.transform.GetChild(0).GetComponent<Toggle>().isOn == true)
+        { // 하급
+            flawActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "20G";
+            currnetFlawActionType = FlawActionType.LOW;
+        }
+        else if(flawTogGroup.transform.GetChild(1).GetComponent<Toggle>().isOn == true)
+        { // 중급
+            flawActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "60G";            
+            currnetFlawActionType = FlawActionType.MIDDLE;
+        }
+        else
+        { // 고급
+            flawActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "100G";
+            currnetFlawActionType = FlawActionType.HIGH;
+        }
+    }
+
+    public void OnAppraiseGrade()
+    {
+      // 요청하고 결과 받기
+        DealActionRequest requestData = new DealActionRequest();
+        requestData.drcKey = dailyDealsMap[currentDealIndex].drcKey;
+        requestData.actionType = "APPRAISE";
+        switch (currentGradeActionType)
+        {
+            case GradeActionType.RARE:
+                requestData.actionLevel = 1;
+                break;
+            case GradeActionType.UNIQUE:
+                requestData.actionLevel = 2;
+                break;
+            case GradeActionType.LEGENDARY:
+                requestData.actionLevel = 3;
+                break;
+        }
+        // 실제 데이터 요청
+        // DealActionResponse responseData =TransmissionManager.Instance.RequestToServer<DealActionRequest,DealActionResponse>(RequestType.DEAL_ACTION,requestData);
+        
+        // 테스트용 데이터 <<<<<<<<<<<<<<<<<
+        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/11dealAction_grade.json", typeof(TextAsset));
+        DealActionResponse responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
+
+        /* 업데이트 */
+        // 총 구매가 & 감정가
+        UpdateTotalPrice(responseData.totalPurchasePrice, responseData.totalAppraisedPrice);
+        // 구매가 변동값
+        currentGradeObjs.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text 
+                =$"{string.Format("{0:#,0}",responseData.changedPurchasedPriceByAction)} G";
+        // 감정가 변동값
+        currentGradeObjs.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text 
+                =$"{string.Format("{0:#,0}",responseData.changedAppraisedPriceByAction)} G";
+        // 찾은 등급값 표시
+        currentGradeObjs.transform.GetChild(2).GetChild(1).GetComponent<TMP_Text>().text 
+                = ConvertGradeToString((Grade)responseData.foundGrade);
+        // 남은 돈 표시
+        gameSessionManager.SetLeftMoney(responseData.leftMoney); 
+    }
+
+    public void OnFindFlaw()
+    {
+        // 요청하고 결과 받기
+        DealActionRequest requestData = new DealActionRequest();
+        requestData.drcKey = dailyDealsMap[currentDealIndex].drcKey;
+        requestData.actionType = "FINDFLAW";
+        switch (currnetFlawActionType)
+        {
+            case FlawActionType.LOW:
+                requestData.actionLevel = 1;
+                break;
+            case FlawActionType.MIDDLE:
+                requestData.actionLevel = 2;
+                break;
+            case FlawActionType.HIGH:
+                requestData.actionLevel = 3;
+                break;
+        }
+        // 실제 데이터 요청
+        // DealActionResponse responseData =TransmissionManager.Instance.RequestToServer<DealActionRequest,DealActionResponse>(RequestType.DEAL_ACTION,requestData);
+        
+        // 테스트용 데이터 <<<<<<<<<<<<<<<<<
+        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/11dealAction_flaw.json", typeof(TextAsset));
+        DealActionResponse responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
+
+        /* 업데이트 */
+        // 총 구매가 & 감정가
+        UpdateTotalPrice(responseData.totalPurchasePrice, responseData.totalAppraisedPrice);
+        // 구매가 변동값
+        currentFlawObjs.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text 
+                =$"{string.Format("{0:#,0}",responseData.changedPurchasedPriceByAction)} G";
+        // 감정가 변동값
+        currentFlawObjs.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text 
+                =$"{string.Format("{0:#,0}",responseData.changedAppraisedPriceByAction)} G";
+        // 찾은 등급값 표시
+        currentFlawObjs.transform.GetChild(2).GetChild(1).GetComponent<TMP_Text>().text 
+                = $"{responseData.foundFlawEa}개";
+        // 남은 돈 표시
+        gameSessionManager.SetLeftMoney(responseData.leftMoney); 
+    }
+
+    public void OnFindAuth()
+    {
+        // 요청하고 결과 받기
+        DealActionRequest requestData = new DealActionRequest();
+        requestData.drcKey = dailyDealsMap[currentDealIndex].drcKey;
+        requestData.actionType = "AUTHCHECK";
+        requestData.actionLevel = 0;
+
+        // 실제 데이터 요청
+        // DealActionResponse responseData =TransmissionManager.Instance.RequestToServer<DealActionRequest,DealActionResponse>(RequestType.DEAL_ACTION,requestData);
+        
+        // 테스트용 데이터 <<<<<<<<<<<<<<<<<
+        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/11dealAction_auth.json", typeof(TextAsset));
+        DealActionResponse responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
+
+        /* 업데이트 */
+        // 총 구매가 & 감정가
+        UpdateTotalPrice(responseData.totalPurchasePrice, responseData.totalAppraisedPrice);
+        // 구매가 변동값
+        currentAuthObjs.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text 
+                =$"{string.Format("{0:#,0}",responseData.changedPurchasedPriceByAction)} G";
+        // 감정가 변동값
+        currentAuthObjs.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text 
+                =$"{string.Format("{0:#,0}",responseData.changedAppraisedPriceByAction)} G";
+        // 찾은 등급값 표시
+        currentAuthObjs.transform.GetChild(2).GetChild(1).GetComponent<TMP_Text>().text 
+                = ConvertAuthToString((Authenticity)responseData.foundAuthenticity);
+        // 남은 돈 표시
+        gameSessionManager.SetLeftMoney(responseData.leftMoney); 
     }
 
     public void OpenItemHint(int posKey)
@@ -363,8 +541,43 @@ public class DealManager : MonoBehaviour
     // 6. 거래 실패 -> 서버에 전달하고 다음 고객, 아이템, 거래패널로 업데이트하기
 
 
-
-
+    private string ConvertAuthToString(Authenticity authenticity)
+    {
+        string strFeed = "";
+        switch (authenticity)
+        {
+            case Authenticity.Real:
+                strFeed= "진품";
+                break;
+            case Authenticity.Fake:
+                strFeed= "가품";
+                break;
+            case Authenticity.Unknown:
+                strFeed= "모름";
+                break;
+        }
+        return strFeed;
+    }
+    private string ConvertGradeToString(Grade grade)
+    {
+        string strFeed = "";
+        switch (grade)
+        {
+            case Grade.Common:
+                strFeed= "일반";
+                break;
+            case Grade.Rare:
+                strFeed= "레어";
+                break;
+            case Grade.Unique:
+                strFeed= "유니크";
+                break;
+            case Grade.Legendary:
+                strFeed= "레전더리";
+                break;
+        }
+        return strFeed;
+    }
 
 
     private void DecideDeal()

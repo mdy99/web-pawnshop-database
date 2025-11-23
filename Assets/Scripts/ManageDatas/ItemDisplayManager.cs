@@ -79,7 +79,7 @@ public class ItemDisplayManager : MonoBehaviour
             // 디스플레이 아이템 정보 패널도 채우기
                 // TODO: 값 채우기
                 string foundAuth="";
-                switch (dData.authenticity)
+                switch (dData.foundAuthenticity)
                 {
                     case -1:
                         foundAuth = "미발견";
