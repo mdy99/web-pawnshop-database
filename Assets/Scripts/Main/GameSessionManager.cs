@@ -25,8 +25,13 @@ public class GameSessionManager : MonoBehaviour
     [SerializeField] private TMP_Text personalDebtOutput;
     [SerializeField] private TMP_Text shopDebtOutput;
     
+    public int GetLeftMoney()
+    {
+        return (int)money;
+    }
     public void SetLeftMoney(int leftMoney)
     {
+        money = leftMoney;
         goldOutput.text =$"{string.Format("{0:#,0}",leftMoney)} G";
     }
 
@@ -68,6 +73,8 @@ public class GameSessionManager : MonoBehaviour
             ConfirmPopuper.Instance.PopupCheckPanel("10자 이하의 가게 이름을 입력하세요");
             return;
         }
+        nickname = nickText;
+        shopName = shopText;
         RequestNewGameSession();
     }
 
@@ -107,6 +114,14 @@ public class GameSessionManager : MonoBehaviour
 
     private void SetUIData(GameSessionData responseData)
     {
+        dayCount = responseData.dayCount;
+        money= responseData.money;
+        personalDebt = responseData.personalDebt;
+        pawnshopDebt = responseData.pawnshopDebt;
+        unlockedShowcaseCount = responseData.unlockedShowcaseCount;
+        nickname = responseData.nickname;
+        shopName = responseData.shopName;   
+
         nickShopDayCountOutput.text = $"{responseData.nickname}의\n{responseData.shopName}\n{responseData.dayCount}일차";
         goldOutput.text = $"{string.Format("{0:#,0}",responseData.money)} G";
         personalDebtOutput.text = $"{string.Format("{0:#,0}",responseData.personalDebt)} G";

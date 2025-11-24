@@ -304,9 +304,10 @@ public class ItemActionResponse
 [System.Serializable]
 public class ActionItemData
 {
-    public int itemKey;
+    public int displayedPositionKey; // 전시장 위치 키
+    public int itemCatalogKey; // 아이템 카탈로그 키
     public int itemState;
-    public string resultMoney; // 변화값. 경매면은 벌은 돈. 복원이면 복원 비용
+    public int deltaMoney; // 돈 변화값. 복원비용/경매보상금
     public int appraisedPrice; // 감정가 변화비용
 }
 

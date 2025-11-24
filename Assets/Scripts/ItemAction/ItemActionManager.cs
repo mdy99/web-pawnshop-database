@@ -44,7 +44,6 @@ public class ItemActionManager : MonoBehaviour
         TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/14itemAction.json", typeof(TextAsset));
         ItemActionResponse responseData =JsonUtility.FromJson<ItemActionResponse>(jsonFile.text);
 
-        Debug.Log(responseData);
         // 디스플레이 아이템 매니저도 업데이트
         displayManager.SetItemState(currentClickedItem.displayPositionKey, responseData.itemState);
         
@@ -59,7 +58,7 @@ public class ItemActionManager : MonoBehaviour
 
     public void OnItemActionTogClicked(bool isOn)
     {
-        if (isOn)
+        if (itemActionTog.transform.GetChild(0).GetComponent<Toggle>().isOn)
         {
             SetRestorableItems();
         }
@@ -100,7 +99,8 @@ public class ItemActionManager : MonoBehaviour
                     break;
             }        
 
-            string displayText =$"{iData.itemCatalogName}: [{iData.categoryName}]\n\n"+ // 아이템 이름
+            string displayText =$"{iData.itemCatalogName}: [{iData.categoryName}]\n"+ // 아이템 이름
+                        $"상태: {ConvertItemState(actionItemList[i].itemState)}\n"+                       
                         $"최초 제시가: {string.Format("{0:#,0}",actionItemList[i].askingPrice)} G\n"+
                         $"구매가: {string.Format("{0:#,0}",actionItemList[i].purchasePrice)} G\n"+
                         $"감정가: {string.Format("{0:#,0}",actionItemList[i].appraisedPrice)} G\n"+
@@ -146,7 +146,8 @@ public class ItemActionManager : MonoBehaviour
                         break;
                 }        
 
-            string displayText =$"{iData.itemCatalogName}: [{iData.categoryName}]\n\n"+ // 아이템 이름
+            string displayText =$"{iData.itemCatalogName}: [{iData.categoryName}]\n"+ // 아이템 이름
+                        $"상태: {ConvertItemState(actionItemList[i].itemState)}\n"+                       
                         $"최초 제시가: {string.Format("{0:#,0}",actionItemList[i].askingPrice)} G\n"+
                         $"구매가: {string.Format("{0:#,0}",actionItemList[i].purchasePrice)} G\n"+
                         $"감정가: {string.Format("{0:#,0}",actionItemList[i].appraisedPrice)} G\n"+
@@ -174,6 +175,24 @@ public class ItemActionManager : MonoBehaviour
     public void PopOffInformPanel(int posKey)
     {
         itemListTog.transform.GetChild(8+posKey).gameObject.SetActive(false);        
+    }
+
+    private string ConvertItemState(ItemState state)
+    {
+        switch (state)
+        {
+            case ItemState.Created:
+                return "생성됨";
+            case ItemState.OnDisplay:
+                return "전시 중";
+            case ItemState.UnderRestoration:
+                return "복원 중";
+            case ItemState.OnAuction:
+                return "경매 중";
+            case ItemState.AfterRestoration:
+                return "복원됨";
+        }
+        return "";
     }
 
 }

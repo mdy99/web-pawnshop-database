@@ -10,13 +10,6 @@ public class TvScriptShower : MonoBehaviour
     [SerializeField] private TMP_Text textEffect;
     
 
-    void Start()
-    {
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/7newsCurrent.json", typeof(TextAsset));
-        NewsWrapData newsList =JsonUtility.FromJson<NewsWrapData>(jsonFile.text);
-        SetTvText(newsList.newsList);
-    }
-
 
     public void SetTvText(List<NewsData> newsDatas)
     {

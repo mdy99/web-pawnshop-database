@@ -1,23 +1,34 @@
 {
   "actionResults": [
     {
-      "itemKey": 301,
-      "itemState": 1,
-      "resultMoney": "-1500",
-      "appraisedPrice": 2000
+        "displayedPositionKey": 0,
+        "itemCatalogKey": 30,
+        "itemState": 5,     	
+        "deltaMoney": -500,  		
+        "appraisedPrice": 2000   
     },
     {
-      "itemKey": 302,
-      "itemState": 3,
-      "resultMoney": "0",
-      "appraisedPrice": 1500
+        "displayedPositionKey": 1,
+        "itemCatalogKey": 79,		
+        "itemState": 5,     	
+        "deltaMoney": -500,  	
+        "appraisedPrice": 1500   
     },
     {
-      "itemKey": 303,
-      "itemState": 1,
-      "resultMoney": "+1500",
-      "appraisedPrice": 1500
+        "displayedPositionKey": 1,
+        "itemCatalogKey": 13,	
+        "itemState": 4,     	
+        "deltaMoney": 1500, 	
+        "appraisedPrice": 1250  	
     }
   ],
-  "leftMoney": 50200
+  "leftMoney": 50200,
+  "isGameOvered": "N",
+  "worldRecord": {
+    "playerId": "player001",
+    "nickname": "PawnMaster",
+    "pawnshopName": "Elite Pawns",
+    "gameEndDayCount": 57,
+    "gameEndDate": "2024-01-15T10:00:00Z"
+    }
 }

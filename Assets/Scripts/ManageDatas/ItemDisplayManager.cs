@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine.UI;
 using TMPro;
+using System.Text.RegularExpressions;
 
 namespace AYellowpaper.SerializedCollections
 {
@@ -19,10 +20,14 @@ public class ItemDisplayManager : MonoBehaviour
     private ItemCatalogData iData;
     void Start()
     {
+        // 실제 데이터 요청
+        // ItemDisplaysWrapData responseData = TransmissionManager.Instance.RequestToServer<int, ItemDisplaysWrapData>(RequestType.DISPLAY_CUR_ALL, 0);
+
         // 실제로는 데이웨이브 매니저 - 통신 매니저에서 수행 할 일이지만 미리 확인을 위해 start에서 실행 중
+        // 테스트 데이터 <<<<<<<<<<<<<<<<<<<<<<<<
         TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/6displayItemAll.json", typeof(TextAsset));
-        ItemDisplaysWrapData displayWrap =JsonUtility.FromJson<ItemDisplaysWrapData>(jsonFile.text);
-        InitDisplayedItem(displayWrap.displays);
+        ItemDisplaysWrapData responseData =JsonUtility.FromJson<ItemDisplaysWrapData>(jsonFile.text);
+        InitDisplayedItem(responseData.displays);
     }
 
     public void InitDisplayedItem(List<DisplayedItemData> displays)
@@ -56,6 +61,57 @@ public class ItemDisplayManager : MonoBehaviour
         itemActionManager.SetItemActionPanel();
     }
 
+    public void UpdateDisplayedItem(ActionItemData actionItemData)
+    {
+        // 전시장 아이템 스테이트 업데이트
+        itemDisplayMap[actionItemData.displayedPositionKey].itemState = (ItemState)actionItemData.itemState;
+        // 전시장 아이템 최종 감정가 업데이트
+        itemDisplayMap[actionItemData.displayedPositionKey].appraisedPrice = actionItemData.appraisedPrice;    
+        // 전시장 아이템 정보 창도 업데이트
+        string patternItemState = @"상태: .*\n";
+        string patternAppraisedPrice = @"감정가: .* G\n";
+        string replacingItemStateString = $"상태: {ConvertItemState(itemDisplayMap[actionItemData.displayedPositionKey].itemState)}\n";
+        string replacingAppraisedPriceString = $"감정가: {string.Format("{0:#,0}",itemDisplayMap[actionItemData.displayedPositionKey].appraisedPrice)} G\n";
+        // 아이템 상태 업데이트
+        displayObjectMap[actionItemData.displayedPositionKey].transform.parent.
+            GetChild(8+actionItemData.displayedPositionKey).GetChild(1).GetComponent<TMP_Text>().text
+        =Regex.Replace(displayObjectMap[actionItemData.displayedPositionKey].transform.parent.
+            GetChild(8+actionItemData.displayedPositionKey).GetChild(1).GetComponent<TMP_Text>().text
+            ,patternItemState, replacingItemStateString);
+        // 감정가 업데이트
+        displayObjectMap[actionItemData.displayedPositionKey].transform.parent.
+            GetChild(8+actionItemData.displayedPositionKey).GetChild(1).GetComponent<TMP_Text>().text
+        =Regex.Replace(displayObjectMap[actionItemData.displayedPositionKey].transform.parent.
+            GetChild(8+actionItemData.displayedPositionKey).GetChild(1).GetComponent<TMP_Text>().text
+            ,patternAppraisedPrice, replacingAppraisedPriceString);
+        itemActionManager.SetItemActionPanel();
+    }
+
+    public void RemoveDisplayedItem(int posKey)
+    {
+        itemDisplayMap.Remove(posKey);
+        displayObjectMap[posKey].SetActive(false);
+        itemActionManager.SetItemActionPanel();
+    }
+
+    private string ConvertItemState(ItemState state)
+    {
+        switch (state)
+        {
+            case ItemState.Created:
+                return "생성됨";
+            case ItemState.OnDisplay:
+                return "전시 중";
+            case ItemState.UnderRestoration:
+                return "복원 중";
+            case ItemState.OnAuction:
+                return "경매 중";
+            case ItemState.AfterRestoration:
+                return "복원됨";
+        }
+        return "";
+    }
+    
     public void ActivateDisplayedItem(int posKey, DisplayedItemData dData)
     {
         // 아이템 이미지 채우기
@@ -73,7 +129,7 @@ public class ItemDisplayManager : MonoBehaviour
             case ItemState.UnderRestoration:
                 displayObjectMap[posKey].transform.GetChild(2).gameObject.SetActive(true);
                 displayObjectMap[posKey].transform.GetChild(2).GetChild(0).GetComponent<TMP_Text>().text=
-                    "수리 중";
+                    "복원 중";
                 break;
             case ItemState.OnAuction:
                 displayObjectMap[posKey].transform.GetChild(2).gameObject.SetActive(true);
@@ -99,10 +155,11 @@ public class ItemDisplayManager : MonoBehaviour
                     break;
             }        
 
-        string displayText =$"{iData.itemCatalogName}: [{iData.categoryName}]\n\n"+ // 아이템 이름
+        string displayText =$"{iData.itemCatalogName}: [{iData.categoryName}]\n"+ // 아이템 이름
+                    $"상태: {ConvertItemState(dData.itemState)}\n"+               
                     $"최초 제시가: {dData.askingPrice}\n"+
                     $"구매가: {string.Format("{0:#,0}",dData.purchasePrice)} G\n"+
-                    $"감정가: {string.Format("{0:#,0}",dData.appraisedPrice)}\n"+
+                    $"감정가: {string.Format("{0:#,0}",dData.appraisedPrice)} G\n"+
                     $"구매일: {string.Format("{0:#,0}",dData.boughtDate)}\n"+
                     $"판매자: {dData.sellerName}\n"+
                     $"찾은 흠 개수: {dData.foundFlawEa}\n"+
