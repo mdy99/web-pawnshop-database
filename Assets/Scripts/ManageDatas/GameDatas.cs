@@ -315,6 +315,8 @@ public class ItemActionResultResponse
 {
     public List<ActionItemData> actionResults;
     public int leftMoney;
+    public string isGameOvered; // "Y" | "N" . 게임 오버 되었으면, "Y"
+    public WorldRecordData worldRecord; // 게임 종료 정보
 }
 
 // ======================================================
