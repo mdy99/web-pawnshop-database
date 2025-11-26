@@ -24,7 +24,43 @@ public class GameSessionManager : MonoBehaviour
     [SerializeField] private TMP_Text goldOutput;
     [SerializeField] private TMP_Text personalDebtOutput;
     [SerializeField] private TMP_Text shopDebtOutput;
-    
+    [SerializeField] private ItemActionManager itemActionManager;
+    [SerializeField] private GameObject GameEndObjs;
+
+
+    public void PopupGameEndObjs(WorldRecordData worldRecordData, string gameOverDescription)
+    {
+        string gameEndTitleText;
+        if(worldRecordData.gameEndDayCount < 0) // 음수면은 게임오버
+        {
+            gameEndTitleText = "게임 오버!";
+        }
+        else
+        {
+            gameEndTitleText = "게임 클리어!!!";
+        }
+        GameEndObjs.transform.GetChild(2).GetComponent<TMP_Text>().text = gameEndTitleText;
+        GameEndObjs.transform.GetChild(3).GetComponent<TMP_Text>().text = 
+                gameOverDescription;
+        GameObject worldRecord = GameEndObjs.transform.GetChild(4).gameObject;
+        // Nickname
+        worldRecord.transform.GetChild(1).GetComponent<TMP_Text>().text
+            = $"#{worldRecordData.playerId}";
+        worldRecord.transform.GetChild(6).GetComponent<TMP_Text>().text
+            = worldRecordData.nickname;
+        // Shopname
+        worldRecord.transform.GetChild(7).GetComponent<TMP_Text>().text
+            = worldRecordData.pawnshopName;
+        // DayCount
+        worldRecord.transform.GetChild(8).GetComponent<TMP_Text>().text
+            = $"{string.Format("{0:#,0}",worldRecordData.gameEndDayCount)} 일";
+        // Date
+        worldRecord.transform.GetChild(9).GetComponent<TMP_Text>().text
+            = worldRecordData.gameEndDate;
+        // 게임 오버 화면 띄우기
+        GameEndObjs.SetActive(true);
+    }
+
     public int GetLeftMoney()
     {
         return (int)money;
@@ -122,9 +158,24 @@ public class GameSessionManager : MonoBehaviour
         nickname = responseData.nickname;
         shopName = responseData.shopName;   
 
+        // 닉네임 및 돈
         nickShopDayCountOutput.text = $"{responseData.nickname}의\n{responseData.shopName}\n{responseData.dayCount}일차";
         goldOutput.text = $"{string.Format("{0:#,0}",responseData.money)} G";
         personalDebtOutput.text = $"{string.Format("{0:#,0}",responseData.personalDebt)} G";
         shopDebtOutput.text = $"{string.Format("{0:#,0}",responseData.pawnshopDebt)} G";
+        // 빚 ui 업데이트
+        itemActionManager.UpdateDebtValue((int)personalDebt, (int)pawnshopDebt);
+    }
+
+    public void SetNextDayUI(DayNextData dayNextData)
+    {
+        // 닉네임 및 돈
+        nickShopDayCountOutput.text = $"{nickname}의\n{shopName}\n{dayNextData.dayCount}일차";
+        goldOutput.text = $"{string.Format("{0:#,0}",dayNextData.leftMoney)} G";
+        personalDebtOutput.text = $"{string.Format("{0:#,0}",dayNextData.personalDebt)} G";
+        shopDebtOutput.text = $"{string.Format("{0:#,0}",dayNextData.pawnshopDebt)} G";
+        // 빚 ui 업데이트
+        itemActionManager.UpdateDebtValue((int)personalDebt, (int)pawnshopDebt);
+        
     }
 }

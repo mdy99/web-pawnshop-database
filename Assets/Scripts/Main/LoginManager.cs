@@ -149,6 +149,34 @@ public class LoginManager : MonoBehaviour
         SceneManager.sceneLoaded += SetLoginScreen;
     }
 
+    public void ResetToLoginScreen()
+    {
+        SceneManager.LoadScene("StartScene");
+        if(loginState == LoginState.IN_LOGIN)
+        { // 스타트 씬에서만 작동
+            RequestToLogOut();
+        }
+        
+        // 오브젝트들도 다시 받아오기
+        Canvas mainCanvas = FindFirstObjectByType<Canvas>();
+        LoginResisterObjs = mainCanvas.transform.GetChild(2).GetChild(1).gameObject;
+        inLoginObjs = mainCanvas.transform.GetChild(2).GetChild(2).gameObject;
+        worldRecordPanel = mainCanvas.transform.GetChild(3).gameObject;
+        // 버튼에도 다시 넣어줘야 함
+        LoginResisterObjs.transform.GetChild(0).GetChild(4).GetComponent<Button>().onClick.AddListener(RequestToLogin);
+        LoginResisterObjs.transform.GetChild(1).GetChild(4).GetComponent<Button>().onClick.AddListener(RequestToRegister);
+        inLoginObjs.transform.GetChild(2).GetComponent<Button>().onClick.AddListener(RequestToLogOut);
+        inLoginObjs.transform.GetChild(1).GetComponent<Button>().onClick.AddListener(OpenWorldRecord);
+        worldRecordPanel.transform.GetChild(3).GetComponent<Button>().onClick.AddListener(CloseWorldRecord);
+        // 세계 기록도 변했을 수 있으니 다시 받아오기
+        LoadWorldRecord(); // 세계 기록 미리 불러오기
+        // 아이디 최신화. 혹시 모르니
+        inLoginObjs.transform.GetChild(4).GetComponent<TMP_Text>().text = playerIdCache;
+        // 패널 활성화 세팅
+        LoginResisterObjs.SetActive(false);
+        inLoginObjs.SetActive(true);
+    }
+
     void SetLoginScreen(Scene scene, LoadSceneMode mode)
     {
         if(SceneManager.GetActiveScene().name != "StartScene")

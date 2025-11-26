@@ -3,6 +3,7 @@ using System.Data.Common;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 namespace AYellowpaper.SerializedCollections
 {
@@ -117,5 +118,6 @@ public class SingletonManager : MonoBehaviour
     {
         return customerCatalogMap[customerKey];
     }
+
 }
 }

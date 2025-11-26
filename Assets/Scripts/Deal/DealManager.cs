@@ -65,7 +65,6 @@ public class DealManager : MonoBehaviour
     private FlawActionType currnetFlawActionType = FlawActionType.LOW;
 
     [SerializeField] private GameSessionManager gameSessionManager;
-    [SerializeField] private GameObject GameEndObjs;
     [SerializeField] private GameObject FinalizeObjs;
 
     private DealCompleteResponse dealDecideActionResponseData = null;
@@ -176,7 +175,7 @@ public class DealManager : MonoBehaviour
             if(currentItemActionResponseData.isGameOvered == "Y")
             {
                 // 게임오버 창 띄우기
-                PopupGameEndObjs(currentItemActionResponseData.worldRecord,
+                gameSessionManager.PopupGameEndObjs(currentItemActionResponseData.worldRecord,
                                     "복원 비용을 못 낸다고? 넌 안 되겠다ㅋㅋ");
             }
         }
@@ -835,30 +834,6 @@ public class DealManager : MonoBehaviour
         FinalizeObjs.SetActive(true);
     }
 
-    private void PopupGameEndObjs(WorldRecordData worldRecordData, string gameOverDescription)
-    {
-        GameEndObjs.transform.GetChild(2).GetComponent<TMP_Text>().text = "게임 오버!";
-        GameEndObjs.transform.GetChild(3).GetComponent<TMP_Text>().text = 
-                gameOverDescription;
-        GameObject worldRecord = GameEndObjs.transform.GetChild(4).gameObject;
-        // Nickname
-        worldRecord.transform.GetChild(1).GetComponent<TMP_Text>().text
-            = $"#{worldRecordData.playerId}";
-        worldRecord.transform.GetChild(6).GetComponent<TMP_Text>().text
-            = worldRecordData.nickname;
-        // Shopname
-        worldRecord.transform.GetChild(7).GetComponent<TMP_Text>().text
-            = worldRecordData.pawnshopName;
-        // DayCount
-        worldRecord.transform.GetChild(8).GetComponent<TMP_Text>().text
-            = $"{string.Format("{0:#,0}",worldRecordData.gameEndDayCount)} 일";
-        // Date
-        worldRecord.transform.GetChild(9).GetComponent<TMP_Text>().text
-            = worldRecordData.gameEndDate;
-        // 게임 오버 화면 띄우기
-        GameEndObjs.SetActive(true);
-    }
-
     public void OnPushFinalizeConfirmButton()
     {// 확인 버튼 누름
         // 정산화면 비활성화
@@ -868,7 +843,7 @@ public class DealManager : MonoBehaviour
         if(dealDecideActionResponseData.isGameOvered == "Y")
         { // 오버했다면, 오버 화면 띄우기
             // 게임 오버 화면 데이터 세팅하기
-            PopupGameEndObjs(dealDecideActionResponseData.worldRecord, 
+            gameSessionManager.PopupGameEndObjs(dealDecideActionResponseData.worldRecord, 
             "상환할 이자를 내지 못해 사채업자들에게 끌려갔습니다...");
         }
         else
@@ -931,6 +906,9 @@ public class DealManager : MonoBehaviour
         customerObj.SetActive(false);
         // 아이템 비활성화
         trayItemObj.SetActive(false);
+        // 다음날 UI 세팅
+        gameSessionManager.SetNextDayUI(dealDecideActionResponseData.dayNext);
+        // 다음 날 시작
         StartToday();
     }
 

@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using UnityEngine.UIElements;
 using System;
 using UnityEditor.Compilation;
+using UnityEngine.SceneManagement;
 
 public enum RequestType{
     REGISTER,           // POST /player/register
@@ -38,6 +39,8 @@ public class TransmissionManager : MonoBehaviour
 
     public static readonly string serverUrl = "http://localhost:8080"; // 서버 URL
     public static string sessionToken = ""; // 세션 토큰 저장
+    
+    [SerializeField] private LoginManager loginManager;
 
     public void SetSessionToken(string sessionTokStr)
     {
@@ -46,6 +49,7 @@ public class TransmissionManager : MonoBehaviour
 
     public S RequestToServer<T,S>(RequestType reqType,T requestData){
         string routeUrl ="";
+        int returnedResponseCode = -1;
         S returnData= default;
         switch(reqType){
             case RequestType.REGISTER: // POST /player/register
@@ -55,6 +59,7 @@ public class TransmissionManager : MonoBehaviour
                     {
                         // 얘는 결과값을 안 받으니 리스폰스 코드(200,404 ...)로 반환함
                         returnData = (S)(object)responseCode; // 오브젝트 최상위로 한번 포장하고 제네릭으로 변환
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.LOGIN: // POST /player/login
@@ -63,6 +68,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.LOGOUT: // POST /player/logout
@@ -72,6 +78,7 @@ public class TransmissionManager : MonoBehaviour
                     {
                         // 얘는 결과값을 안 받으니 리스폰스 코드(200,404 ...)로 반환함
                         returnData = (S)(object)responseCode; // 오브젝트 최상위로 한번 포장하고 제네릭으로 변환
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.NEW_SESSION: // POST /game-session/new
@@ -80,6 +87,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.LATEST_SESSION: // POST /game-session/latest
@@ -88,6 +96,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.CHECK_END: // POST /game/checkEnd
@@ -96,6 +105,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.INIT_CATALOGS: // GET /catalog/initialData
@@ -104,6 +114,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.DISPLAY_CUR_ALL: // GET /display/currentAll
@@ -112,6 +123,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.NEWS_CUR: // GET /news/current
@@ -120,6 +132,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.CUS_REVEAL: // PATCH /customer/reveal
@@ -128,6 +141,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.GET_ITEM_HINTS: // GET /item/getHints
@@ -136,6 +150,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.ITEM_ACTION: // POST /item/action
@@ -144,6 +159,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.ITEM_RESULT: // POST /item/result
@@ -152,6 +168,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.ITEM_SELL_START: // POST /item/sellStart
@@ -160,6 +177,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.ITEM_SELL_COMPLETE: // POST /item/sellComplete
@@ -168,6 +186,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.DAILY_DEALS: // POST /deal/generateDailyDeals
@@ -176,6 +195,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.DEAL_ACTION: // POST /deal/action
@@ -184,6 +204,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.DEAL_COMPLETE: // POST /deal/complete
@@ -192,6 +213,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.LOAN_UPDATE: // POST /loan/update
@@ -200,6 +222,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.DEAL_CANCEL: // POST /deal/cancel
@@ -209,6 +232,7 @@ public class TransmissionManager : MonoBehaviour
                     {
                         // 얘는 결과값을 안 받으니 리스폰스 코드(200,404 ...)로 반환함
                         returnData = (S)(object)responseCode; // 오브젝트 최상위로 한번 포장하고 제네릭으로 변환
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.DAY_NEXT: // POST /day/next
@@ -217,6 +241,7 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
             case RequestType.WORLD_RECORDS: // GET /worldRecords
@@ -225,12 +250,20 @@ public class TransmissionManager : MonoBehaviour
                     (responseCode, responseData) =>
                     {
                         returnData = responseData;
+                        returnedResponseCode = responseCode;
                     }));
                 break;
         }
+        // returnedResponseCode = 401; // <<<<< 디버깅용 코드
+        // 401 Unauthorized 
+        if(returnedResponseCode == 401)
+        {
+            ConfirmPopuper.Instance.
+                PopupCheckPanel("세션토큰이 만료되었습니다.\n로그인 화면으로 이동합니다.",
+                                                ()=>{loginManager.ResetToLoginScreen();});
+        }
         return returnData;
     }
-
 
     // 인자로 전달한 파라미터에 결과값 담아서 줄게
     IEnumerator GetJsonValue<S>(string routeUrl, Action<int,S> callback)

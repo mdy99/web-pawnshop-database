@@ -321,7 +321,19 @@ MonoBehaviour:
   m_Group: {fileID: 1649843554}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 449805074}
+        m_TargetAssemblyTypeName: ItemActionManager, Assembly-CSharp
+        m_MethodName: OnPersonalDebtGoldToggleClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_IsOn: 0
 --- !u!1 &6923400
 GameObject:
@@ -7726,7 +7738,19 @@ MonoBehaviour:
   m_Group: {fileID: 1649843554}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 449805074}
+        m_TargetAssemblyTypeName: ItemActionManager, Assembly-CSharp
+        m_MethodName: OnPersonalDebtGoldToggleClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_IsOn: 0
 --- !u!1 &318756325
 GameObject:
@@ -10151,6 +10175,13 @@ MonoBehaviour:
   itemActionTog: {fileID: 1696631918}
   itemListTog: {fileID: 2027594800}
   displayManager: {fileID: 1766135788}
+  gameSessionManager: {fileID: 1397915742}
+  toggleObjsManager: {fileID: 803008280}
+  personalDebtTogObjs: {fileID: 1649843552}
+  pawnshopDebtTogObjs: {fileID: 1277765653}
+  pawnshopDebtActionTogObjs: {fileID: 107604743}
+  personalDebtText: {fileID: 590986856}
+  pawnshopDebtText: {fileID: 1180263705}
 --- !u!1 &463064703
 GameObject:
   m_ObjectHideFlags: 0
@@ -10808,7 +10839,19 @@ MonoBehaviour:
   m_Group: {fileID: 1277765655}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 449805074}
+        m_TargetAssemblyTypeName: ItemActionManager, Assembly-CSharp
+        m_MethodName: OnPawnshopDebtGoldToggleClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_IsOn: 0
 --- !u!1 &478234235
 GameObject:
@@ -11045,7 +11088,19 @@ MonoBehaviour:
   m_Group: {fileID: 107604745}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 449805074}
+        m_TargetAssemblyTypeName: ItemActionManager, Assembly-CSharp
+        m_MethodName: OnPawnshopDebtActionToggleClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_IsOn: 1
 --- !u!1 &487741285
 GameObject:
@@ -14153,7 +14208,19 @@ MonoBehaviour:
   m_Group: {fileID: 1277765655}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 449805074}
+        m_TargetAssemblyTypeName: ItemActionManager, Assembly-CSharp
+        m_MethodName: OnPawnshopDebtGoldToggleClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_IsOn: 0
 --- !u!1 &629773615
 GameObject:
@@ -20049,7 +20116,19 @@ MonoBehaviour:
   m_Group: {fileID: 1649843554}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 449805074}
+        m_TargetAssemblyTypeName: ItemActionManager, Assembly-CSharp
+        m_MethodName: OnPersonalDebtGoldToggleClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_IsOn: 1
 --- !u!1 &980076479
 GameObject:
@@ -20341,7 +20420,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1003926336}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 449805074}
+        m_TargetAssemblyTypeName: ItemActionManager, Assembly-CSharp
+        m_MethodName: OnPersonalDebtButtonClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1003926336
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22239,7 +22330,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 640.00006, y: 390}
+  m_AnchoredPosition: {x: 639.32, y: 379.7}
   m_SizeDelta: {x: 783.67, y: 593.91}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1176347354
@@ -24776,7 +24867,19 @@ MonoBehaviour:
   m_Group: {fileID: 107604745}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 449805074}
+        m_TargetAssemblyTypeName: ItemActionManager, Assembly-CSharp
+        m_MethodName: OnPawnshopDebtActionToggleClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_IsOn: 0
 --- !u!1 &1328174311
 GameObject:
@@ -25730,7 +25833,19 @@ MonoBehaviour:
   m_Group: {fileID: 1277765655}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 449805074}
+        m_TargetAssemblyTypeName: ItemActionManager, Assembly-CSharp
+        m_MethodName: OnPawnshopDebtGoldToggleClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_IsOn: 1
 --- !u!1 &1376173090
 GameObject:
@@ -26294,6 +26409,8 @@ MonoBehaviour:
   goldOutput: {fileID: 880046109}
   personalDebtOutput: {fileID: 590986856}
   shopDebtOutput: {fileID: 1180263705}
+  itemActionManager: {fileID: 449805074}
+  GameEndObjs: {fileID: 1195569493}
 --- !u!4 &1397915743
 Transform:
   m_ObjectHideFlags: 0
@@ -26490,7 +26607,19 @@ MonoBehaviour:
   m_Group: {fileID: 1277765655}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 449805074}
+        m_TargetAssemblyTypeName: ItemActionManager, Assembly-CSharp
+        m_MethodName: OnPawnshopDebtGoldToggleClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_IsOn: 0
 --- !u!1 &1438154200
 GameObject:
@@ -27828,7 +27957,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1468303562}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 449805074}
+        m_TargetAssemblyTypeName: ItemActionManager, Assembly-CSharp
+        m_MethodName: OnPawnshopDebtButtonClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1468303562
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34850,7 +34991,6 @@ MonoBehaviour:
   gradeActionButton: {fileID: 773537724}
   flawActionButton: {fileID: 1376173090}
   gameSessionManager: {fileID: 1397915742}
-  GameEndObjs: {fileID: 1195569493}
   FinalizeObjs: {fileID: 2110684963}
   tvScriptShower: {fileID: 569571982}
   itemResultObjs: {fileID: 698684217}
@@ -35352,7 +35492,19 @@ MonoBehaviour:
   m_Group: {fileID: 1649843554}
   onValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 449805074}
+        m_TargetAssemblyTypeName: ItemActionManager, Assembly-CSharp
+        m_MethodName: OnPersonalDebtGoldToggleClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_IsOn: 0
 --- !u!1001 &1921476193
 PrefabInstance:

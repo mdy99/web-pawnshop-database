@@ -6024,7 +6024,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa2aba1ad5d98ed4c887ef594109680f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TransmissionManager
-  loginManager: {fileID: 498304020}
 --- !u!4 &1998826356
 Transform:
   m_ObjectHideFlags: 0

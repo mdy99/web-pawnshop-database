@@ -5,6 +5,21 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using TMPro;
 using UnityEditor;
+using Unity.VisualScripting;
+
+public enum DebtGoldUnit
+{
+    HUNDRED =100,
+    FIVE_HUNDRED = 500,
+    THOUSAND = 1000,
+    TWO_THOUSAND = 20009
+}
+
+public enum DebtActionType
+{
+    LOAN,
+    REPAY
+}
 
 public class ItemActionManager : MonoBehaviour
 {
@@ -12,9 +27,191 @@ public class ItemActionManager : MonoBehaviour
     [SerializeField] private GameObject itemActionTog;
     [SerializeField] private GameObject itemListTog;
     [SerializeField] private ItemDisplayManager displayManager;
+    [SerializeField] private GameSessionManager gameSessionManager;
+    [SerializeField] private ToggleObjs toggleObjsManager;
+
+    [SerializeField] private GameObject personalDebtTogObjs;
+    [SerializeField] private GameObject pawnshopDebtTogObjs;
+    [SerializeField] private GameObject pawnshopDebtActionTogObjs;
+    [SerializeField] private TMP_Text personalDebtText;
+    [SerializeField] private TMP_Text pawnshopDebtText;
     
     List<DisplayedItemData> actionItemList;
     private DisplayedItemData currentClickedItem;
+
+    private DebtGoldUnit currentPersonalDebtGoldClickedUnit;
+    private DebtGoldUnit currentPawnshopDebtGoldClickedUnit;
+    private DebtActionType currentPawnshopDebtActionType;
+
+
+    public void UpdateDebtValue(int personalDebt = 0, int pawnshopDebt = 0)
+    {
+        if(personalDebt != 0)
+        {
+            personalDebtText.text
+                = $"{string.Format("{0:#,0}",personalDebt)}G";            
+        }
+        if(pawnshopDebt != 0)
+        {
+            pawnshopDebtText.text
+                = $"{string.Format("{0:#,0}",pawnshopDebt)}G";
+        }
+        
+    }
+
+    
+    // 개인 빚 상환 버튼 눌렸을 때
+    public void OnPersonalDebtButtonClicked()
+    {
+        // 요청 데이터 생성
+        LoanUpdateRequest requestData = new LoanUpdateRequest();
+        // 해당 설정으로 요청 데이터 세팅
+        requestData.debtType = "PERSONAL";
+        // 금액 세팅(개인 빚은 무조건 상환)
+        requestData.amount = -1 * (int)currentPersonalDebtGoldClickedUnit;
+        // 요청 데이터 보내고 반환 데이터 받기
+        // LoanUpdateResponse responseData =TransmissionManager.Instance.RequestToServer<LoanUpdateRequest,LoanUpdateResponse>(RequestType.DEAL_ACTION,requestData);
+        
+        // 테스트용 데이터 <<<<<<<<<<<<<<<<<
+        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/18loanUpdatePersonal.json", typeof(TextAsset));
+        LoanUpdateResponse responseData =JsonUtility.FromJson<LoanUpdateResponse>(jsonFile.text);
+
+        /* 결과 데이터 UI 업데이트하기 */
+        // 돈 업데이트
+        gameSessionManager.SetLeftMoney(responseData.leftMoney);
+        // 가게빚 UI 업데이트
+        UpdateDebtValue(responseData.leftDebtAmount, 0);
+        // 팝업창 띄우기
+        string log = $"개인 빚 {string.Format("{0:#,0}",(int)currentPersonalDebtGoldClickedUnit)}G을 상환하였습니다.";
+        ConfirmPopuper.Instance.PopupCheckPanel(log);
+        // 게임 클리어 됐는지 체크
+        if(responseData.isGameCleared == "Y")
+        { 
+            // 뉴스 패널 끄기
+            toggleObjsManager.TurnOffNewsObjs();
+            
+            // 게임 클리어 화면 데이터 세팅하기
+            gameSessionManager.PopupGameEndObjs(responseData.worldRecord, 
+            "모든 빚을 다 상환하여 게임을 클리어하였습니다!!!");
+        }
+    }
+
+    // 가게 빚 대출/상환 버튼 눌렸을 때
+    public void OnPawnshopDebtButtonClicked()
+    {
+        // 요청 데이터 생성
+        LoanUpdateRequest requestData = new LoanUpdateRequest();
+        requestData.debtType = "PAWNSHOP";
+        // 대출인지 상환인지 구분 확인
+        if(currentPawnshopDebtActionType == DebtActionType.LOAN) // 대출 요청이라면
+        {
+            // 금액 세팅
+            requestData.amount = (int)currentPawnshopDebtGoldClickedUnit;
+        }
+        else // 상환
+        {
+            // 금액 세팅
+            requestData.amount = -1 * (int)currentPawnshopDebtGoldClickedUnit;
+            
+        }
+        // 요청 데이터 보내고 반환 데이터 받기
+        // LoanUpdateResponse responseData =TransmissionManager.Instance.RequestToServer<LoanUpdateRequest,LoanUpdateResponse>(RequestType.DEAL_ACTION,requestData);
+        
+        // 테스트용 데이터 <<<<<<<<<<<<<<<<<
+        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/18loanUpdateClearPawnShop.json", typeof(TextAsset));
+        LoanUpdateResponse responseData =JsonUtility.FromJson<LoanUpdateResponse>(jsonFile.text);
+
+        /* 결과 데이터 UI 업데이트하기 */
+        // 돈 업데이트
+        gameSessionManager.SetLeftMoney(responseData.leftMoney);
+        // 가게빚 UI 업데이트
+        UpdateDebtValue(0, responseData.leftDebtAmount);
+        // 팝업창 띄우기
+        string log;
+        if(requestData.amount > 0) // 대출이었다면
+        {
+            log = $"가게 빚 {string.Format("{0:#,0}",(int)currentPawnshopDebtGoldClickedUnit)}G을 대출하였습니다.";        
+        }
+        else
+        {
+            log = $"가게 빚 {string.Format("{0:#,0}",(int)currentPawnshopDebtGoldClickedUnit)}G을 상환하였습니다.";                    
+        }
+        ConfirmPopuper.Instance.PopupCheckPanel(log);
+
+        // 게임 클리어 됐는지 체크
+        if(responseData.isGameCleared == "Y")
+        {
+            // 뉴스 패널 끄기
+            toggleObjsManager.TurnOffNewsObjs();
+            // 게임 클리어 화면 띄우기
+            gameSessionManager.PopupGameEndObjs(responseData.worldRecord, 
+            "모든 빚을 다 상환하여 게임을 클리어하였습니다!!!");
+        }
+
+    }
+
+    public void OnPersonalDebtGoldToggleClicked()
+    {
+        // 전역변수 업데이트
+        bool tog2000 = personalDebtTogObjs.transform.GetChild(0).GetComponent<Toggle>().isOn;
+        bool tog1000 = personalDebtTogObjs.transform.GetChild(1).GetComponent<Toggle>().isOn;
+        bool tog500 = personalDebtTogObjs.transform.GetChild(2).GetComponent<Toggle>().isOn;
+        bool tog100 = personalDebtTogObjs.transform.GetChild(3).GetComponent<Toggle>().isOn;
+        if(tog2000 == true)
+        {
+            currentPersonalDebtGoldClickedUnit = DebtGoldUnit.TWO_THOUSAND;
+        }
+        else if(tog1000 == true)
+        {
+            currentPersonalDebtGoldClickedUnit = DebtGoldUnit.THOUSAND;
+        }
+        else if(tog500 == true)
+        {
+            currentPersonalDebtGoldClickedUnit = DebtGoldUnit.FIVE_HUNDRED;
+        }
+        else if(tog100 == true)
+        {
+            currentPersonalDebtGoldClickedUnit = DebtGoldUnit.HUNDRED;
+        }
+    }
+    public void OnPawnshopDebtGoldToggleClicked()
+    {
+        // 전역변수 업데이트
+        bool tog2000 = pawnshopDebtTogObjs.transform.GetChild(0).GetComponent<Toggle>().isOn;
+        bool tog1000 = pawnshopDebtTogObjs.transform.GetChild(1).GetComponent<Toggle>().isOn;
+        bool tog500 = pawnshopDebtTogObjs.transform.GetChild(2).GetComponent<Toggle>().isOn;
+        bool tog100 = pawnshopDebtTogObjs.transform.GetChild(3).GetComponent<Toggle>().isOn;
+        if(tog2000 == true)
+        {
+            currentPawnshopDebtGoldClickedUnit = DebtGoldUnit.TWO_THOUSAND;
+        }
+        else if(tog1000 == true)
+        {
+            currentPawnshopDebtGoldClickedUnit = DebtGoldUnit.THOUSAND;
+        }
+        else if(tog500 == true)
+        {
+            currentPawnshopDebtGoldClickedUnit = DebtGoldUnit.FIVE_HUNDRED;
+        }
+        else if(tog100 == true)
+        {
+            currentPawnshopDebtGoldClickedUnit = DebtGoldUnit.HUNDRED;
+        }        
+    }
+    public void OnPawnshopDebtActionToggleClicked()
+    {
+        // 전역변수 업데이트
+        bool togLoan = pawnshopDebtActionTogObjs.transform.GetChild(0).GetComponent<Toggle>().isOn;
+        bool togRepay = pawnshopDebtActionTogObjs.transform.GetChild(1).GetComponent<Toggle>().isOn;
+        if(togLoan == true)
+        {
+            currentPawnshopDebtActionType = DebtActionType.LOAN;
+        }
+        else if(togRepay == true)
+        {
+            currentPawnshopDebtActionType = DebtActionType.REPAY;
+        }        
+    }
 
     public void OnActionItemClicked(bool isOn, int itemIndex){
         if(isOn){
