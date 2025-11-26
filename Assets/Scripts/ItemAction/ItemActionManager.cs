@@ -70,7 +70,7 @@ public class ItemActionManager : MonoBehaviour
         // 금액 세팅(개인 빚은 무조건 상환)
         requestData.amount = -1 * (int)currentPersonalDebtGoldClickedUnit;
         // 요청 데이터 보내고 반환 데이터 받기
-        // LoanUpdateResponse responseData =TransmissionManager.Instance.RequestToServer<LoanUpdateRequest,LoanUpdateResponse>(RequestType.DEAL_ACTION,requestData);
+        // LoanUpdateResponse responseData =TransmissionManager.Instance.RequestToServer<LoanUpdateRequest,LoanUpdateResponse>(RequestType.LOAN_UPDATE,requestData);
         
         // 테스트용 데이터 <<<<<<<<<<<<<<<<<
         TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/18loanUpdatePersonal.json", typeof(TextAsset));
@@ -84,6 +84,7 @@ public class ItemActionManager : MonoBehaviour
         // 팝업창 띄우기
         string log = $"개인 빚 {string.Format("{0:#,0}",(int)currentPersonalDebtGoldClickedUnit)}G을 상환하였습니다.";
         ConfirmPopuper.Instance.PopupCheckPanel(log);
+        DialogueManager.Instance.PutDialogue("<속마음> 이정도 갚았나..\n 모든 빚을 다 갚으면 모든 목적을 이룬 걸 거야..");
         // 게임 클리어 됐는지 체크
         if(responseData.isGameCleared == "Y")
         { 
@@ -93,6 +94,7 @@ public class ItemActionManager : MonoBehaviour
             // 게임 클리어 화면 데이터 세팅하기
             gameSessionManager.PopupGameEndObjs(responseData.worldRecord, 
             "모든 빚을 다 상환하여 게임을 클리어하였습니다!!!");
+            DialogueManager.Instance.PutDialogue("<주인> 다 갚았다!!");
         }
     }
 
@@ -115,7 +117,7 @@ public class ItemActionManager : MonoBehaviour
             
         }
         // 요청 데이터 보내고 반환 데이터 받기
-        // LoanUpdateResponse responseData =TransmissionManager.Instance.RequestToServer<LoanUpdateRequest,LoanUpdateResponse>(RequestType.DEAL_ACTION,requestData);
+        // LoanUpdateResponse responseData =TransmissionManager.Instance.RequestToServer<LoanUpdateRequest,LoanUpdateResponse>(RequestType.LOAN_UPDATE,requestData);
         
         // 테스트용 데이터 <<<<<<<<<<<<<<<<<
         TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/18loanUpdateClearPawnShop.json", typeof(TextAsset));
@@ -131,13 +133,14 @@ public class ItemActionManager : MonoBehaviour
         if(requestData.amount > 0) // 대출이었다면
         {
             log = $"가게 빚 {string.Format("{0:#,0}",(int)currentPawnshopDebtGoldClickedUnit)}G을 대출하였습니다.";        
+            DialogueManager.Instance.PutDialogue("<속마음> 어쩔 수 없다.. 대출을 받자");
         }
         else
         {
             log = $"가게 빚 {string.Format("{0:#,0}",(int)currentPawnshopDebtGoldClickedUnit)}G을 상환하였습니다.";                    
+            DialogueManager.Instance.PutDialogue("<속마음> 이대로 조금씩 조금씩..");
         }
         ConfirmPopuper.Instance.PopupCheckPanel(log);
-
         // 게임 클리어 됐는지 체크
         if(responseData.isGameCleared == "Y")
         {
@@ -146,6 +149,7 @@ public class ItemActionManager : MonoBehaviour
             // 게임 클리어 화면 띄우기
             gameSessionManager.PopupGameEndObjs(responseData.worldRecord, 
             "모든 빚을 다 상환하여 게임을 클리어하였습니다!!!");
+            DialogueManager.Instance.PutDialogue("<주인> 다 갚았다!!");
         }
 
     }
@@ -160,18 +164,22 @@ public class ItemActionManager : MonoBehaviour
         if(tog2000 == true)
         {
             currentPersonalDebtGoldClickedUnit = DebtGoldUnit.TWO_THOUSAND;
+            DialogueManager.Instance.PutDialogue("<속마음> 2,000골드를...");
         }
         else if(tog1000 == true)
         {
             currentPersonalDebtGoldClickedUnit = DebtGoldUnit.THOUSAND;
+            DialogueManager.Instance.PutDialogue("<속마음> 1,000골드를...");
         }
         else if(tog500 == true)
         {
             currentPersonalDebtGoldClickedUnit = DebtGoldUnit.FIVE_HUNDRED;
+            DialogueManager.Instance.PutDialogue("<속마음> 500골드를...");
         }
         else if(tog100 == true)
         {
             currentPersonalDebtGoldClickedUnit = DebtGoldUnit.HUNDRED;
+            DialogueManager.Instance.PutDialogue("<속마음> 100골드를...");
         }
     }
     public void OnPawnshopDebtGoldToggleClicked()
@@ -184,18 +192,22 @@ public class ItemActionManager : MonoBehaviour
         if(tog2000 == true)
         {
             currentPawnshopDebtGoldClickedUnit = DebtGoldUnit.TWO_THOUSAND;
+            DialogueManager.Instance.PutDialogue("<속마음> 2,000골드를...");
         }
         else if(tog1000 == true)
         {
             currentPawnshopDebtGoldClickedUnit = DebtGoldUnit.THOUSAND;
+            DialogueManager.Instance.PutDialogue("<속마음> 1,000골드를...");
         }
         else if(tog500 == true)
         {
             currentPawnshopDebtGoldClickedUnit = DebtGoldUnit.FIVE_HUNDRED;
+            DialogueManager.Instance.PutDialogue("<속마음> 500골드를...");
         }
         else if(tog100 == true)
         {
             currentPawnshopDebtGoldClickedUnit = DebtGoldUnit.HUNDRED;
+            DialogueManager.Instance.PutDialogue("<속마음> 100골드를...");
         }        
     }
     public void OnPawnshopDebtActionToggleClicked()
@@ -206,10 +218,12 @@ public class ItemActionManager : MonoBehaviour
         if(togLoan == true)
         {
             currentPawnshopDebtActionType = DebtActionType.LOAN;
+            DialogueManager.Instance.PutDialogue("<속마음> 대출을 할까..");
         }
         else if(togRepay == true)
         {
             currentPawnshopDebtActionType = DebtActionType.REPAY;
+            DialogueManager.Instance.PutDialogue("<속마음> 상환을 할까..");
         }        
     }
 
@@ -227,10 +241,12 @@ public class ItemActionManager : MonoBehaviour
         if (itemActionTog.transform.GetChild(0).GetComponent<Toggle>().isOn)
         {
             requestData.actionType = "restore";
+            DialogueManager.Instance.PutDialogue("<속마음> 복원할 수 있는 아이템이...");
         }
         else
         {
             requestData.actionType = "auction";
+            DialogueManager.Instance.PutDialogue("<속마음> 경매 나갈 수 있는 아이템이...");
         }
         Debug.Log(requestData.actionType);
         requestData.itemKey = currentClickedItem.itemKey;
@@ -246,6 +262,7 @@ public class ItemActionManager : MonoBehaviour
         
         // 여기 아이템액션 매니저의 창도 업데이트
         OnItemActionTogClicked(itemActionTog.transform.GetChild(0).GetComponent<Toggle>().isOn);
+        DialogueManager.Instance.PutDialogue("<속마음> 얼마나 걸릴려나..");
     }
 
     public void SetItemActionPanel()

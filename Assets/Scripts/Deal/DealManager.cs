@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using TMPro;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 public enum GradeActionType
 {
@@ -75,6 +76,37 @@ public class DealManager : MonoBehaviour
     private int actionItemIndex = -1;
     private ItemActionResultResponse currentItemActionResponseData;
 
+    string[] dealSuccessDialogues = new string[]
+    {"<고객> 썩 맘에 드는 가격은\n아니지만, 알겠어요",
+        "<고객> 좋은 거래\n감사합니다 *^^*",
+        "<고객> 거래 감사합니다.",
+        "<고객> 이걸 이 가격까지\n후릴 줄이야..",
+        "<고객> 다음에 쿨거하면\n좀 더 쳐주시나요?",
+        };
+    string[] denyDealDialogueList = new string[]
+    {
+        "거래를 아주 매몰차게 거부하였습니다.",
+        "당신은 고객을 벌레 보듯이 쳐다보며 내쫓았습니다.",
+        "당신은 고객이 가져온 물건을 가게 바깥에 내동댕이치며 나가라고 소리쳤습니다.",
+        "거래를 정상적으로 거부하였습니다."
+    };
+    string[] denyDealDialogues = new string[]
+    {
+        "<고객> 에라이 나도\n여기서 안 팔아~",
+        "<고객> 알겠습니다..\n아쉽네요",
+        "<고객> 다음에는 좋은 거래가\n있길 바랍니다"
+    };
+
+    string[] sellCompleteDialogues = new string[]
+    {
+        "<고객> 좋은 거래 감사합니다 *^^*",
+        "<고객> 이 가격이면\n합당하네요~",
+        "<고객> 경매로 팔면 더 받으실텐데\n이 가격이면 너무 좋네요~"
+    };
+
+    private bool isFlawLevelTogClicked = false;
+    private bool isGradeTogClicked = false;
+
     void Start()
     {
         // 전시장 아이템 불러오기
@@ -84,6 +116,7 @@ public class DealManager : MonoBehaviour
 
     private void StartToday()
     {
+        DialogueManager.Instance.PutDialogue("<속마음> 날이 시작된다..");
         // 오늘의 뉴스 이벤트 불러오기
         RequestDailyNews();
         // 오늘 복원/경매 완료 된 것들 불러오기
@@ -118,6 +151,7 @@ public class DealManager : MonoBehaviour
         UpdateItemResultData();
         // 아이템 결과 패널 띄우기
         itemResultObjs.SetActive(true);
+        DialogueManager.Instance.PutDialogue("<속마음> 벌써 처리가 되었군..");
     }
 
     private void UpdateItemResultData()
@@ -177,13 +211,26 @@ public class DealManager : MonoBehaviour
                 // 게임오버 창 띄우기
                 gameSessionManager.PopupGameEndObjs(currentItemActionResponseData.worldRecord,
                                     "복원 비용을 못 낸다고? 넌 안 되겠다ㅋㅋ");
+                DialogueManager.Instance.PutDialogue("<속마음> 아뿔싸 돈을 남겨두는\n습관을 가질 걸..");
             }
         }
         else
         { // 다음 경매/복원 완료 아이템 세팅
             UpdateItemResultData();
+            DialogueManager.Instance.PutDialogue("<속마음> 벌써 처리가 되었군..");
         }
    }
+
+    IEnumerator PutNewsDialogue(NewsWrapData responseData)
+    {
+        for(int i = 0; i < responseData.newsList.Count; ++i)
+        {
+            DialogueManager.Instance.PutDialogue
+            ($"<뉴스> {responseData.newsList[i].affectedCategoryName}의 {SingletonManager.Instance.ConvertToAffectedPrice((AffectedPrice)responseData.newsList[i].affectedPrice)}가 {responseData.newsList[i].amount}%만큼 영향을 받겠습니다.\n");
+            yield return new WaitForSeconds(2.0f);
+        }
+        
+    }
 
     // 오늘의 뉴스 이벤트 불러오기
     private void RequestDailyNews()
@@ -193,6 +240,7 @@ public class DealManager : MonoBehaviour
         // 테스트용 코드 <<<<<<<<<<<<<<<<<<
         TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/7newsCurrent.json", typeof(TextAsset));
         NewsWrapData responseData =JsonUtility.FromJson<NewsWrapData>(jsonFile.text);
+        StartCoroutine(PutNewsDialogue(responseData));
         // tv에 표시하기
         tvScriptShower.SetTvText(responseData.newsList);
     }
@@ -262,6 +310,8 @@ public class DealManager : MonoBehaviour
             // 아이템/고객 힌트 처리
             InitAlreadyRevealedCustomerHint();
             ActivateAllItemHintButton();
+            // 다이얼로그
+            DialogueManager.Instance.PutDialogue("<고객> 좋은 거래 물품을\n가져왔어요 *^^*");
         }
         else // 판매 세팅
         {
@@ -271,41 +321,63 @@ public class DealManager : MonoBehaviour
 
     public void OnGradeLevelToggleClicked()
     {
-        // 현재 토글 상태 변경하기
-        if(gradeTogGroup.transform.GetChild(0).GetComponent<Toggle>().isOn == true)
-        { // rare
-            gradeActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "20G";
-            currentGradeActionType = GradeActionType.RARE;
-        }
-        else if(gradeTogGroup.transform.GetChild(1).GetComponent<Toggle>().isOn == true)
-        { // unique
-            gradeActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "30G";            
-            currentGradeActionType = GradeActionType.UNIQUE;
+        if (isGradeTogClicked)
+        {
+            isGradeTogClicked = false;
+            // 현재 토글 상태 변경하기
+            if(gradeTogGroup.transform.GetChild(0).GetComponent<Toggle>().isOn == true)
+            { // rare
+                gradeActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "20G";
+                currentGradeActionType = GradeActionType.RARE;
+                DialogueManager.Instance.PutDialogue("<속마음> 레어 등급까지도 찾을 수 있겠어..\n실제 등급이 그정도라면..");
+            }
+            else if(gradeTogGroup.transform.GetChild(1).GetComponent<Toggle>().isOn == true)
+            { // unique
+                gradeActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "30G";            
+                currentGradeActionType = GradeActionType.UNIQUE;
+                DialogueManager.Instance.PutDialogue("<속마음> 유니크 등급까지도 찾을 수 있겠어..\n실제 등급이 그정도라면..");
+            }
+            else
+            { // legendary
+                gradeActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "50G";
+                currentGradeActionType = GradeActionType.LEGENDARY;
+                DialogueManager.Instance.PutDialogue("<속마음> 레전더리까지도 찾을 수 있겠어..\n실제 등급이 그정도라면..");
+            }            
         }
         else
-        { // legendary
-            gradeActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "50G";
-            currentGradeActionType = GradeActionType.LEGENDARY;
+        {
+            isGradeTogClicked = true;
         }
     }
 
     public void OnFlawLevelToggleClicked()
     {
-        // TODO: 현재 토글 상태 변경하기
-        if(flawTogGroup.transform.GetChild(0).GetComponent<Toggle>().isOn == true)
-        { // 하급
-            flawActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "20G";
-            currnetFlawActionType = FlawActionType.LOW;
-        }
-        else if(flawTogGroup.transform.GetChild(1).GetComponent<Toggle>().isOn == true)
-        { // 중급
-            flawActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "60G";            
-            currnetFlawActionType = FlawActionType.MIDDLE;
+        if (isFlawLevelTogClicked)
+        {
+            isFlawLevelTogClicked = false;
+            // TODO: 현재 토글 상태 변경하기
+            if(flawTogGroup.transform.GetChild(0).GetComponent<Toggle>().isOn == true)
+            { // 하급
+                flawActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "20G";
+                currnetFlawActionType = FlawActionType.LOW;
+                DialogueManager.Instance.PutDialogue("<속마음> 1개 정도는 찾을 수 있겠어..\n실제 흠 개수가 그정도 있다면..");
+            }
+            else if(flawTogGroup.transform.GetChild(1).GetComponent<Toggle>().isOn == true)
+            { // 중급
+                flawActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "60G";            
+                currnetFlawActionType = FlawActionType.MIDDLE;
+                DialogueManager.Instance.PutDialogue("<속마음> 4개 정도는 찾을 수 있겠어..\n실제 흠 개수가 그정도 있다면..");
+            }
+            else
+            { // 고급
+                flawActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "100G";
+                currnetFlawActionType = FlawActionType.HIGH;
+                DialogueManager.Instance.PutDialogue("<속마음> 7개 정도는 찾을 수 있겠어..\n실제 흠 개수가 그정도 있다면..");
+            }            
         }
         else
-        { // 고급
-            flawActionButton.transform.GetChild(0).GetComponent<TMP_Text>().text = "100G";
-            currnetFlawActionType = FlawActionType.HIGH;
+        {
+            isFlawLevelTogClicked = true;
         }
     }
 
@@ -348,6 +420,9 @@ public class DealManager : MonoBehaviour
                 = ConvertGradeToString((Grade)responseData.foundGrade);
         // 남은 돈 표시
         gameSessionManager.SetLeftMoney(responseData.leftMoney); 
+        // 다이얼로그
+        DialogueManager.Instance.
+            PutDialogue($"<속마음> 등급 감정으로 {ConvertGradeToString((Grade)responseData.foundGrade)}라는 것을 알아냈다.\n좀 더 높을 수도 있지 않을까..?");
     }
 
     public void OnFindFlaw()
@@ -389,6 +464,9 @@ public class DealManager : MonoBehaviour
                 = $"{responseData.foundFlawEa}개";
         // 남은 돈 표시
         gameSessionManager.SetLeftMoney(responseData.leftMoney); 
+        // 다이얼로그
+        DialogueManager.Instance.
+            PutDialogue($"<속마음> 흠 찾기로 {responseData.foundFlawEa}개를 찾아냈다.\n좀 더 찾을 수도 있지 않을까?");
     }
 
     public void OnFindAuth()
@@ -420,6 +498,18 @@ public class DealManager : MonoBehaviour
                 = ConvertAuthToString((Authenticity)responseData.foundAuthenticity);
         // 남은 돈 표시
         gameSessionManager.SetLeftMoney(responseData.leftMoney); 
+        // 다이얼로그
+        string message;
+        if(responseData.foundAuthenticity == 0) // 가품
+        {
+            message = $"<속마음> 등급 감정으로 {ConvertAuthToString((Authenticity)responseData.foundAuthenticity)}라는 것을 알아냈다.\n 복원할 때 알아냈으면 엄청난 손해를 볼 뻔 했어..";
+        }
+        else // 진품
+        {
+            message = $"<속마음> 등급 감정으로 {ConvertAuthToString((Authenticity)responseData.foundAuthenticity)}라는 것을 알아냈다.\n";            
+        }
+        // 다이얼로그
+        DialogueManager.Instance.PutDialogue(message);
     }
 
     public void OpenItemHint(int posKey)
@@ -443,6 +533,8 @@ public class DealManager : MonoBehaviour
         // 남은 돈 표시
         gameSessionManager.SetLeftMoney(responseData.leftMoney); 
 
+        // 다이얼로그
+        DialogueManager.Instance.PutDialogue($"<속마음>{responseData.hintName}는 {responseData.hintValue}정도군.. ");
         // 아이템 힌트 버튼 SetActive(false) 때리기
         currentItemHintObjs.transform.GetChild(posKey).GetChild(2).gameObject.SetActive(false);
     }
@@ -481,7 +573,8 @@ public class DealManager : MonoBehaviour
             = $"{responseData.value*100}%";
         // 남은 돈 표시
         gameSessionManager.SetLeftMoney(responseData.leftMoney); 
-
+        // 다이얼로그
+        DialogueManager.Instance.PutDialogue($"<속마음>{ConvertCustomerAttributeToString(responseData.attribute)}는 {responseData.value*100}%정도군.. ");
         // 고객 힌트 버튼 SetActive(false) 때리기
         currentCusHintObjs.transform.GetChild(3+posKey).GetChild(2).gameObject.SetActive(false);
     }
@@ -673,6 +766,8 @@ public class DealManager : MonoBehaviour
             = Resources.Load<Sprite>($"IMG_ITEM_CATALOG/{iData.imgId}");
         // 텍스트 세팅
         sellObjs.transform.GetChild(0).GetChild(2).GetChild(0).GetChild(1).GetComponent<TMP_Text>().text =$"{sellStartResponseData.sellingPrice}";  
+        // 다이얼로그
+        DialogueManager.Instance.PutDialogue("<고객> 이 아이템의 테마가 저랑 잘 어울리는 것 같아요.\n 구매하고 싶네요");
     }
 
 
@@ -696,7 +791,7 @@ public class DealManager : MonoBehaviour
         ConfirmPopuper.Instance.
             PopupCheckPanel
                 ($"고객 직접 판매를 통해 {string.Format("{0:#,0}",responseData.earnedAmount)} G를 획득하였습니다!");
-
+        DialogueManager.Instance.PutDialogue(sellCompleteDialogues[Random.Range(0,sellCompleteDialogues.Length)]);
         // 판매 오브젝트 끄기
         deseBlackFilter.SetActive(false);
         sellObjs.SetActive(false);
@@ -799,6 +894,8 @@ public class DealManager : MonoBehaviour
             dealObjs.SetActive(false);
             // 거래 성공 확인 팝업창 띄우기
             ConfirmPopuper.Instance.PopupCheckPanel("거래에 성공하였습니다!");
+            // 다이얼로그
+            DialogueManager.Instance.PutDialogue(dealSuccessDialogues[Random.Range(0,dealSuccessDialogues.Length)]);
             // 다음 거래로 이동
             currentDealIndex++; 
             // 다음 행동 정하기
@@ -814,6 +911,7 @@ public class DealManager : MonoBehaviour
         {
             // 거래 실패 확인 팝업창 띄우기
             ConfirmPopuper.Instance.PopupCheckPanel("거래에 실패하였습니다.\n남은 돈을 확인해보세요");   
+            DialogueManager.Instance.PutDialogue("돈이 없다구요?");
         } 
     }
 
@@ -831,6 +929,7 @@ public class DealManager : MonoBehaviour
         FinalizeObjs.transform.GetChild(2).GetChild(4).GetComponent<TMP_Text>().text
           =$"{string.Format("{0:#,0}",dealDecideActionResponseData.dayFinalize.finalMoney)}G";
         // 정산 화면 띄우기
+        DialogueManager.Instance.PutDialogue("<속마음> 정산의 시간이다..");
         FinalizeObjs.SetActive(true);
     }
 
@@ -845,6 +944,7 @@ public class DealManager : MonoBehaviour
             // 게임 오버 화면 데이터 세팅하기
             gameSessionManager.PopupGameEndObjs(dealDecideActionResponseData.worldRecord, 
             "상환할 이자를 내지 못해 사채업자들에게 끌려갔습니다...");
+            DialogueManager.Instance.PutDialogue("<주인> 안돼!!");
         }
         else
         {// 오버하지 않았다면, 다음 날 세팅    
@@ -865,7 +965,7 @@ public class DealManager : MonoBehaviour
         requestData.itemKey = currentDealData.itemKey;
         requestData.drcKey = currentDealData.drcKey;
         // 서버에 요청하고 데이터 받아오기
-        // DealCompleteResponse responseData =TransmissionManager.Instance.RequestToServer<DealCompleteRequest,DealCompleteResponse>(RequestType.DEAL_COMPLETE,requestData);
+        // DealCompleteResponse responseData =TransmissionManager.Instance.RequestToServer<DealCompleteRequest,DealCompleteResponse>(RequestType.DEAL_CANCEL,requestData);
 
         // 테스트용 데이터 사용
         TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/12dealCancelLeftDeal.json", typeof(TextAsset));
@@ -877,14 +977,8 @@ public class DealManager : MonoBehaviour
         deseBlackFilter.SetActive(false); 
         dealObjs.SetActive(false);
         // 거래 거부 성공 확인 팝업창 띄우기
-        string[] denyDealDialogueList =
-        {
-            "거래를 아주 매몰차게 거부하였습니다.",
-            "당신은 고객을 벌레 보듯이 쳐다보며 내쫓았습니다.",
-            "당신은 고객이 가져온 물건을 가게 바깥에 내동댕이치며 나가라고 소리쳤습니다.",
-            "거래를 정상적으로 거부하였습니다."
-        };
         ConfirmPopuper.Instance.PopupCheckPanel(denyDealDialogueList[Random.Range(0,denyDealDialogueList.Length)]);
+        DialogueManager.Instance.PutDialogue(denyDealDialogues[Random.Range(0,denyDealDialogues.Length)]);
         // 다음 거래로 이동
         currentDealIndex++; 
         // 다음 행동 정하기

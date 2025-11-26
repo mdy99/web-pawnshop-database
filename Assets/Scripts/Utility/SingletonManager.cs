@@ -80,7 +80,7 @@ public class SingletonManager : MonoBehaviour
         SceneManager.sceneLoaded -= SetMainCanvas;
     }
 
-        public static SingletonManager Instance
+    public static SingletonManager Instance
     {
         get
         {
@@ -96,6 +96,23 @@ public class SingletonManager : MonoBehaviour
     public Canvas getMainCanvas()
     {
         return mainCanvas;
+    }
+
+    public string ConvertToAffectedPrice(AffectedPrice price)
+    {
+        switch (price)
+        {
+            case AffectedPrice.AppraisedPrice:
+                return "감정가";
+            case AffectedPrice.AskingPrice:
+                return "최초 제시가";
+            case AffectedPrice.PurchasePrice:
+                return "구매가";
+            case AffectedPrice.SellingPrice:
+                return "판매가";
+            default: 
+                return "없는 가격";
+        }
     }
 
     public void InitCatalogMaps(InitialCatalogResponse catalogs)

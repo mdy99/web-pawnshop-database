@@ -79,11 +79,9 @@ public class DialogueManager : MonoBehaviour
         dialogue.SetText("");
     }
 
-    IEnumerator TestPutMessage(string message,float time){
-        while(true){
-            yield return new WaitForSeconds(time);
-            PutDialogue(message);
-        }
+    public IEnumerator PutMessageWaitTime(string message,float time = 1f){
+        yield return new WaitForSeconds(time);
+        PutDialogue(message);
     }
 
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEditor;
+using AYellowpaper.SerializedCollections;
 
 public class TvScriptShower : MonoBehaviour
 {
@@ -19,28 +20,11 @@ public class TvScriptShower : MonoBehaviour
         {
             textDesc = textDesc + "       "+ newsDatas[i].newsDescription;
             textEff=textEff+"       "+newsDatas[i].affectedCategoryName
-                            +SwitchAffectedPrice((AffectedPrice)newsDatas[i].affectedPrice)
+                            +SingletonManager.Instance.ConvertToAffectedPrice((AffectedPrice)newsDatas[i].affectedPrice)
                             +newsDatas[i].amount+"%";   
         }
         textDescription.GetComponent<SlidingText>().SetFullText(textDesc);
         textEffect.GetComponent<SlidingText>().SetFullText(textEff);
-    }
-
-    string SwitchAffectedPrice(AffectedPrice price)
-    {
-        switch (price)
-        {
-            case AffectedPrice.AppraisedPrice:
-                return "감정가";
-            case AffectedPrice.AskingPrice:
-                return "최초 제시가";
-            case AffectedPrice.PurchasePrice:
-                return "구매가";
-            case AffectedPrice.SellingPrice:
-                return "판매가";
-            default: 
-                return "없는 가격";
-        }
     }
 
 }
