@@ -217,7 +217,7 @@ public class LoginManager : MonoBehaviour
         requestData.playerId = RegisterIdTMP.text;
         requestData.password = RegisterPwTMP.text;
         // TODO: 해당 default가 성공인지 실패인지 알려면
-        int responseCode =TransmissionManager.Instance.RequestToServer<PlayerRegisterLoginRequest,int>(RequestType.LOGIN,requestData);
+        int responseCode =TransmissionManager.Instance.RequestToServer<PlayerRegisterLoginRequest,int>(RequestType.REGISTER,requestData);
         responseCode =200; // <<<<<<<<<<<<<<< 확인용 코드
         if(responseCode == 200)
         {
@@ -243,6 +243,9 @@ public class LoginManager : MonoBehaviour
 
     private void LoadWorldRecord()
     {
+        // WorldRecordResponse worldRecordsData = TransmissionManager.Instance.RequestToServer<int, WorldRecordResponse>(RequestType.WORLD_RECORDS, 0);
+
+        // 테스트 데이터 <<<<<<<<<<<<<<<<<<<<<
         TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/20worldRecords.json", typeof(TextAsset));
         WorldRecordResponse worldRecordsData =JsonUtility.FromJson<WorldRecordResponse>(jsonFile.text);
 

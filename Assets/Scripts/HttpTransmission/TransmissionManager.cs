@@ -14,7 +14,6 @@ public enum RequestType{
     LOGOUT,             // POST /player/logout
     NEW_SESSION,        // POST /game-session/new
     LATEST_SESSION,     // POST /game-session/latest
-    CHECK_END,          // POST /game/checkEnd
     INIT_CATALOGS,      // GET /catalog/initialData
     DISPLAY_CUR_ALL,    // GET /display/currentAll
     NEWS_CUR,           // GET /news/current
@@ -23,13 +22,13 @@ public enum RequestType{
     ITEM_ACTION,        // POST /item/action
     ITEM_RESULT,        // POST /item/result
     ITEM_SELL_START,    // POST /item/sellStart
+    ITEM_SELL_CANCEL, // POST /item/sellCancel
     ITEM_SELL_COMPLETE, // POST /item/sellComplete
-    DAILY_DEALS,        // POST /deal/generateDailyDeals
+    DAILY_DEALS,        // POST /deal/loadOrGenerateDailyDeals
     DEAL_ACTION,        // POST /deal/action
     DEAL_COMPLETE,      // POST /deal/complete
     DEAL_CANCEL,        // POST /deal/cancel
     LOAN_UPDATE,        // POST /loan/update
-    DAY_NEXT,           // POST /day/next
     WORLD_RECORDS       // GET /worldRecords
 }
 
@@ -92,15 +91,6 @@ public class TransmissionManager : MonoBehaviour
                 break;
             case RequestType.LATEST_SESSION: // POST /game-session/latest
                 routeUrl = "/game-session/latest";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
-                break;
-            case RequestType.CHECK_END: // POST /game/checkEnd
-                routeUrl = "/game/checkEnd";
                 StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
                     (responseCode, responseData) =>
                     {
@@ -180,6 +170,15 @@ public class TransmissionManager : MonoBehaviour
                         returnedResponseCode = responseCode;
                     }));
                 break;
+            case RequestType.ITEM_SELL_CANCEL: // POST /item/sellCancel
+                routeUrl = "/item/sellCancel";
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
+                    (responseCode, responseData) =>
+                    {
+                        returnData = responseData;
+                        returnedResponseCode = responseCode;
+                    }));
+                break;
             case RequestType.ITEM_SELL_COMPLETE: // POST /item/sellComplete
                 routeUrl = "/item/sellComplete";
                 StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
@@ -189,8 +188,8 @@ public class TransmissionManager : MonoBehaviour
                         returnedResponseCode = responseCode;
                     }));
                 break;
-            case RequestType.DAILY_DEALS: // POST /deal/generateDailyDeals
-                routeUrl = "/deal/generateDailyDeals";
+            case RequestType.DAILY_DEALS: // POST /deal/loadOrGenerateDailyDeals
+                routeUrl = "/deal/loadOrGenerateDailyDeals";
                 StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
                     (responseCode, responseData) =>
                     {
@@ -235,15 +234,6 @@ public class TransmissionManager : MonoBehaviour
                         returnedResponseCode = responseCode;
                     }));
                 break;
-            case RequestType.DAY_NEXT: // POST /day/next
-                routeUrl = "/day/next";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
-                break;
             case RequestType.WORLD_RECORDS: // GET /worldRecords
                 routeUrl = "/worldRecords";
                 StartCoroutine(GetJsonValue<S>(routeUrl,
@@ -262,6 +252,12 @@ public class TransmissionManager : MonoBehaviour
                 PopupCheckPanel("세션토큰이 만료되었습니다.\n로그인 화면으로 이동합니다.",
                                                 ()=>{loginManager.ResetToLoginScreen();});
         }
+        else if(returnedResponseCode != 200)
+        {
+            // ConfirmPopuper.Instance.
+            //     PopupCheckPanel("통신 오류가 발생하였습니다.");
+        }
+
         return returnData;
     }
 
@@ -271,6 +267,13 @@ public class TransmissionManager : MonoBehaviour
         string jsonUrl = serverUrl+routeUrl; // ex http://local.host/player/register
         using(UnityWebRequest req  = UnityWebRequest.Get(jsonUrl)) // 여기서는 그냥 선언만 함
         {
+            // 헤더 설정
+            req.SetRequestHeader("Content-Type","application/json"); // json 타입으로 주고 받을게
+            if(!string.IsNullOrEmpty(sessionToken)) // 세션 토큰 방어
+            {
+                req.SetRequestHeader("Authorization", $"Token {sessionToken}"); // 세션 토큰 헤더에 담기
+            }
+            // 통신 시도
             yield return req.SendWebRequest(); // 여기서 실제로 요청을 전송하는 거임
             if(req.result != UnityWebRequest.Result.Success) // 에러 발생
             {

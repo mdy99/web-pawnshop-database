@@ -55,9 +55,12 @@ public class SingletonManager : MonoBehaviour
             DontDestroyOnLoad(this.gameObject);
 
             // 나중에 이거 데이웨이브매니저에서 실행해야하는 거 알지?
+            // InitialCatalogResponse responseData = TransmissionManager.Instance.RequestToServer<int,InitialCatalogResponse>(RequestType.INIT_CATALOGS, 0);
+
+            // 테스트용 코드 <<<<<<<<<<<<<<<<<<<<<<<<<
             TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/5initialCatalog.json", typeof(TextAsset));
-            InitialCatalogResponse displayWrap =JsonUtility.FromJson<InitialCatalogResponse>(jsonFile.text);
-            InitCatalogMaps(displayWrap);
+            InitialCatalogResponse responseData =JsonUtility.FromJson<InitialCatalogResponse>(jsonFile.text);
+            InitCatalogMaps(responseData);
         }
         else
         {

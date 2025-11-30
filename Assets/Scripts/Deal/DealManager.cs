@@ -53,7 +53,7 @@ public class DealManager : MonoBehaviour
     private GameObject currentTotalPriceObjs;
     
     private Dictionary<int,DisplayedItemData> displaysMap;
-    private SellStartRequest currentSellItem=new SellStartRequest();
+    private SellCompleteRequest currentSellItem=new SellCompleteRequest();
     
     private int currentDealIndex =-1;
     
@@ -280,10 +280,9 @@ public class DealManager : MonoBehaviour
             = $"{cData.customerName}\n[{cData.favoriteCategoryName}]";
 
         /* 거래/판매 분기점 */
-        int posKey =-1;
-        if ((posKey=DecideNextIsDeal())== -1 || isOverToSell == true) // 거래 세팅. 판매하고 왔으면, 거래로 진행해
+        if (DecideNextIsDeal()== -1 || isOverToSell == true) // 거래 세팅. 판매하고 왔으면, 거래로 진행해
         // int posKey =1; // 판매 확인용 코드
-        // if(false)
+        //if(false)
         {
             // 아이템 설정
             ItemCatalogData iData = SingletonManager.Instance?.GetItemCatalog(dData.itemCatalogKey);
@@ -315,7 +314,7 @@ public class DealManager : MonoBehaviour
         }
         else // 판매 세팅
         {
-            SetSellPanel(posKey);
+            SetSellPanel();
         }
     }
 
@@ -748,24 +747,42 @@ public class DealManager : MonoBehaviour
         }
     }
 
-    public void SetSellPanel(int posKey)
+    public void SetSellPanel()
     {
         // TODO: 요청 데이터 세팅
-        currentSellItem.itemKey = displaysMap[posKey].itemKey;
-        currentSellItem.customerKey = currentDealData.customerKey;
+        SellStartRequest requestData = new SellStartRequest();
+        requestData.customerKey = currentDealData.customerKey;
         
         // 요청하고 결과값 받기 -> 서버 있어야 받을 수 있음
         // SellStartResponse responseData =TransmissionManager.Instance.RequestToServer<SellStartRequest,SellStartResponse>(RequestType.ITEM_SELL_START,requestData);
 
-        // 테스트용 데이터 사용
+        // 테스트용 데이터 사용 <<<<<<<<<<<<<<<
         TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/16itemSellStart.json", typeof(TextAsset));
-        SellStartResponse sellStartResponseData =JsonUtility.FromJson<SellStartResponse>(jsonFile.text);
+        SellStartResponse responseData =JsonUtility.FromJson<SellStartResponse>(jsonFile.text);
+        // 아이템 키를 받았을테니까 여기서 
+        int posKey = -1;
+        for(int i = 0; i < displaysMap.Count; ++i)
+        {
+            if(displaysMap[i].itemKey == responseData.itemKey)
+                {
+                    posKey = i;
+                    break;
+                }
+        }
+        if(posKey == -1)
+        {
+            ConfirmPopuper.Instance.PopupCheckPanel("해당 전시장 위치에 아이템이 없습니다.");
+        }
+        // posKey = 0; // 디버깅용 코드 <<<
+        // 전역 현재 판매 데이터 세팅
+        currentSellItem.customerKey = currentDealData.customerKey;
+        currentSellItem.itemKey = responseData.itemKey;
         //이미지 세팅
         ItemCatalogData iData=SingletonManager.Instance.GetItemCatalog(displaysMap[posKey].itemCatalogKey);
         sellObjs.transform.GetChild(0).GetChild(1).GetChild(0).GetChild(0).GetComponent<Image>().sprite
             = Resources.Load<Sprite>($"IMG_ITEM_CATALOG/{iData.imgId}");
         // 텍스트 세팅
-        sellObjs.transform.GetChild(0).GetChild(2).GetChild(0).GetChild(1).GetComponent<TMP_Text>().text =$"{sellStartResponseData.sellingPrice}";  
+        sellObjs.transform.GetChild(0).GetChild(2).GetChild(0).GetChild(1).GetComponent<TMP_Text>().text =$"{responseData.sellingPrice}";  
         // 다이얼로그
         DialogueManager.Instance.PutDialogue("<고객> 이 아이템의 테마가 저랑 잘 어울리는 것 같아요.\n 구매하고 싶네요");
     }
@@ -773,13 +790,10 @@ public class DealManager : MonoBehaviour
 
     public void OnDecideToSellItem()
     {
-        SellCompleteRequest requestData=null;
-        requestData.itemKey = currentSellItem.itemKey;
-        requestData.customerKey = currentSellItem.customerKey;
         // 서버에 전달하기 sellComplete
-        // SellCompleteResponse responseData =TransmissionManager.Instance.RequestToServer<SellCompleteRequest,SellCompleteResponse>(RequestType.ITEM_SELL_COMPLETE,requestData);
+        // SellCompleteResponse responseData =TransmissionManager.Instance.RequestToServer<SellCompleteRequest,SellCompleteResponse>(RequestType.ITEM_SELL_COMPLETE,currentSellItem);
 
-        // 테스트용 데이터 사용
+        // 테스트용 데이터 사용 <<<<<<<<<<<<<<<<<<
         TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/17sellComplete.json", typeof(TextAsset));
         SellCompleteResponse responseData =JsonUtility.FromJson<SellCompleteResponse>(jsonFile.text);
 
@@ -799,6 +813,14 @@ public class DealManager : MonoBehaviour
 
     public void OnDenyToSellItem()
     {
+        // 판매 거부를 서버에다 전달하기
+        SellCancelRequest requestData = new SellCancelRequest();
+        requestData.itemKey = currentSellItem.itemKey;
+        requestData.customerKey = currentSellItem.customerKey;
+
+        // 서버에 전달
+        TransmissionManager.Instance.RequestToServer<SellCancelRequest, int>(RequestType.ITEM_SELL_CANCEL, requestData);
+
         // 고객 상태 -> 거래 상태로 바꾸기
         SingletonManager.Instance.IsCustomerDealState = CustomerState.Deal;
         // 거래 패널 세팅하기

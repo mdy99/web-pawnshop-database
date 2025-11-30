@@ -328,15 +328,24 @@ public class ItemActionResultResponse
 [System.Serializable]
 public class SellStartRequest
 {
-    public int itemKey;
     public int customerKey;
 }
 
 [System.Serializable]
 public class SellStartResponse
 {
+    public int itemKey;
     public int sellingPrice;
 }
+
+[System.Serializable]
+public class SellCancelRequest
+{
+    public int itemKey;
+    public int customerKey;
+}
+
+
 
 [System.Serializable]
 public class SellCompleteRequest
