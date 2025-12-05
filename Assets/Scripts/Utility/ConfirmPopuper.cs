@@ -1,5 +1,4 @@
 using TMPro;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
@@ -55,8 +54,8 @@ public class ConfirmPopuper : MonoBehaviour
         {
             instance = this;
             DontDestroyOnLoad(this.gameObject);
-
-        if((popupUI = (GameObject)AssetDatabase.LoadAssetAtPath("Assets/Prefabs/CHECK_POPUP.prefab", typeof(GameObject)))==null)
+        // if((popupUI = (GameObject)AssetDatabase.LoadAssetAtPath("Assets/Prefabs/CHECK_POPUP.prefab", typeof(GameObject)))==null)
+        if((popupUI = Resources.Load<GameObject>("Prefabs/CHECK_POPUP.prefab"))==null)
         {
             Debug.LogError("there's no CHECK_POPUP.prefab");
         }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEditor;
 using AYellowpaper.SerializedCollections;
 
 public class TvScriptShower : MonoBehaviour

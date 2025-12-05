@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
-using UnityEditor;
 using TMPro;
 using UnityEngine.SceneManagement;
 using System.Collections;
@@ -130,28 +129,44 @@ public class DealManager : MonoBehaviour
     {
         /* 데이터 가져오기 */ 
         // 실제 데이터 받는 코드        
-        // ItemActionResultResponse responseData =TransmissionManager.Instance.RequestToServer<int,ItemActionResultResponse>(RequestType.ITEM_RESULT,0);
-        // 테스트용 코드 <<<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/15itemResult.json", typeof(TextAsset));
-        ItemActionResultResponse responseData =JsonUtility.FromJson<ItemActionResultResponse>(jsonFile.text);
-        /* 복원/경매 완료 된 것들 보여주기 하나씩 하나씩 */
-
-        // 경매/복원 완료 된 거 없으면 종료
-        if(responseData.actionResults == null)
-        {
-            return;
-        }
-        // 전역 actionDataList 세팅
-        actionItemDatas = responseData.actionResults;
-        // 전역 인덱스 =0
-        actionItemIndex = 0; // 인덱스 시작
-        // 현재 경매/복원 완료 요청 데이터 답변 데이터 전역 세팅
-        currentItemActionResponseData = responseData;
-        // 아이템 결과 패널 데이터 세팅하기
-        UpdateItemResultData();
-        // 아이템 결과 패널 띄우기
-        itemResultObjs.SetActive(true);
-        DialogueManager.Instance.PutDialogue("<속마음> 벌써 처리가 되었군..");
+        TransmissionManager.Instance.RequestToServer<int,ItemActionResultResponse>(
+            RequestType.ITEM_RESULT,
+            0,
+            (responseCode, responseData) =>
+            {
+                // 테스트용 코드 <<<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/15itemResult.json");
+                responseData =JsonUtility.FromJson<ItemActionResultResponse>(jsonFile.text);
+                
+                // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 경매/복원 완료 아이템 불러오기 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                /* 복원/경매 완료 된 것들 보여주기 하나씩 하나씩 */
+                else
+                {
+                    // 경매/복원 완료 된 거 없으면 종료
+                    if(responseData.actionResults == null)
+                    {
+                        return;
+                    }
+                    // 전역 actionDataList 세팅
+                    actionItemDatas = responseData.actionResults;
+                    // 전역 인덱스 =0
+                    actionItemIndex = 0; // 인덱스 시작
+                    // 현재 경매/복원 완료 요청 데이터 답변 데이터 전역 세팅
+                    currentItemActionResponseData = responseData;
+                    // 아이템 결과 패널 데이터 세팅하기
+                    UpdateItemResultData();
+                    // 아이템 결과 패널 띄우기
+                    itemResultObjs.SetActive(true);
+                    DialogueManager.Instance.PutDialogue("<속마음> 벌써 처리가 되었군..");                    
+                }
+            }
+        );
     }
 
     private void UpdateItemResultData()
@@ -236,24 +251,56 @@ public class DealManager : MonoBehaviour
     private void RequestDailyNews()
     {
         // 실제 데이터 받는 코드        
-        // NewsWrapData responseData =TransmissionManager.Instance.RequestToServer<int,NewsWrapData>(RequestType.NEWS_CUR,0);
-        // 테스트용 코드 <<<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/7newsCurrent.json", typeof(TextAsset));
-        NewsWrapData responseData =JsonUtility.FromJson<NewsWrapData>(jsonFile.text);
-        StartCoroutine(PutNewsDialogue(responseData));
-        // tv에 표시하기
-        tvScriptShower.SetTvText(responseData.newsList);
+        TransmissionManager.Instance.RequestToServer<int,NewsWrapData>(
+            RequestType.NEWS_CUR,
+            0,
+            (responseCode, responseData) =>
+            {
+                // 테스트용 코드 <<<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/7newsCurrent.json");
+                responseData =JsonUtility.FromJson<NewsWrapData>(jsonFile.text);
+                
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 오늘의 뉴스 이벤트 불러오기 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    StartCoroutine(PutNewsDialogue(responseData));
+                    // tv에 표시하기
+                    tvScriptShower.SetTvText(responseData.newsList);                    
+                }
+            }
+        );
     }
 
     private void RequestDailyDeals()
     {
         // 실제 데이터 받는 코드        
-        // DailyDealsWrapData responseData =TransmissionManager.Instance.RequestToServer<int,DailyDealsWrapData>(RequestType.DAILY_DEALS,0);
-        // 테스트용 코드 <<<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/10generateDailyDeals.json", typeof(TextAsset));
-        DailyDealsWrapData dailyDealsWrapData =JsonUtility.FromJson<DailyDealsWrapData>(jsonFile.text);
-        // 받은 데이터로 오늘 데이터 세팅
-        InitDailyDeals(dailyDealsWrapData.dailyDeals);
+        TransmissionManager.Instance.RequestToServer<int,DailyDealsWrapData>(
+            RequestType.DAILY_DEALS,
+            0,
+            (responseCode, responseData) =>
+            {                
+                // 테스트용 코드 <<<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/10generateDailyDeals.json");
+                responseData =JsonUtility.FromJson<DailyDealsWrapData>(jsonFile.text);
+
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 오늘의 거래 생성 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                // 받은 데이터로 오늘 데이터 세팅
+                else
+                {
+                    InitDailyDeals(responseData.dailyDeals);
+                }
+            }
+        );
     }
 
     public void InitDailyDeals(List<DealData> dailyDeals)
@@ -399,29 +446,43 @@ public class DealManager : MonoBehaviour
                 break;
         }
         // 실제 데이터 요청
-        // DealActionResponse responseData =TransmissionManager.Instance.RequestToServer<DealActionRequest,DealActionResponse>(RequestType.DEAL_ACTION,requestData);
-        
-        // 테스트용 데이터 <<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/11dealAction_grade.json", typeof(TextAsset));
-        DealActionResponse responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
-
-        /* 업데이트 */
-        // 총 구매가 & 감정가
-        UpdateTotalPrice(responseData.totalPurchasePrice, responseData.totalAppraisedPrice);
-        // 구매가 변동값
-        currentGradeObjs.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text 
-                =$"{string.Format("{0:#,0}",responseData.changedPurchasedPriceByAction)} G";
-        // 감정가 변동값
-        currentGradeObjs.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text 
-                =$"{string.Format("{0:#,0}",responseData.changedAppraisedPriceByAction)} G";
-        // 찾은 등급값 표시
-        currentGradeObjs.transform.GetChild(2).GetChild(1).GetComponent<TMP_Text>().text 
-                = ConvertGradeToString((Grade)responseData.foundGrade);
-        // 남은 돈 표시
-        gameSessionManager.SetLeftMoney(responseData.leftMoney); 
-        // 다이얼로그
-        DialogueManager.Instance.
-            PutDialogue($"<속마음> 등급 감정으로 {ConvertGradeToString((Grade)responseData.foundGrade)}라는 것을 알아냈다.\n좀 더 높을 수도 있지 않을까..?");
+        TransmissionManager.Instance.RequestToServer<DealActionRequest,DealActionResponse>(
+            RequestType.DEAL_ACTION,
+            requestData,
+            (responseCode, responseData) =>
+            {
+                // 테스트용 데이터 <<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_grade.json");
+                 responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
+                 // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 등급 감정 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    /* 업데이트 */
+                    // 총 구매가 & 감정가
+                    UpdateTotalPrice(responseData.totalPurchasePrice, responseData.totalAppraisedPrice);
+                    // 구매가 변동값
+                    currentGradeObjs.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text 
+                            =$"{string.Format("{0:#,0}",responseData.changedPurchasedPriceByAction)} G";
+                    // 감정가 변동값
+                    currentGradeObjs.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text 
+                            =$"{string.Format("{0:#,0}",responseData.changedAppraisedPriceByAction)} G";
+                    // 찾은 등급값 표시
+                    currentGradeObjs.transform.GetChild(2).GetChild(1).GetComponent<TMP_Text>().text 
+                            = ConvertGradeToString((Grade)responseData.foundGrade);
+                    // 남은 돈 표시
+                    gameSessionManager.SetLeftMoney(responseData.leftMoney); 
+                    // 다이얼로그
+                    DialogueManager.Instance.
+                        PutDialogue($"<속마음> 등급 감정으로 {ConvertGradeToString((Grade)responseData.foundGrade)}라는 것을 알아냈다.\n좀 더 높을 수도 있지 않을까..?");                    
+                }
+            }
+        );
     }
 
     public void OnFindFlaw()
@@ -443,29 +504,44 @@ public class DealManager : MonoBehaviour
                 break;
         }
         // 실제 데이터 요청
-        // DealActionResponse responseData =TransmissionManager.Instance.RequestToServer<DealActionRequest,DealActionResponse>(RequestType.DEAL_ACTION,requestData);
-        
-        // 테스트용 데이터 <<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/11dealAction_flaw.json", typeof(TextAsset));
-        DealActionResponse responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
+        TransmissionManager.Instance.RequestToServer<DealActionRequest,DealActionResponse>(
+            RequestType.DEAL_ACTION,
+            requestData,
+            (responseCode, responseData) =>
+            {
+                // 테스트용 데이터 <<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_flaw.json");
+                responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
 
-        /* 업데이트 */
-        // 총 구매가 & 감정가
-        UpdateTotalPrice(responseData.totalPurchasePrice, responseData.totalAppraisedPrice);
-        // 구매가 변동값
-        currentFlawObjs.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text 
-                =$"{string.Format("{0:#,0}",responseData.changedPurchasedPriceByAction)} G";
-        // 감정가 변동값
-        currentFlawObjs.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text 
-                =$"{string.Format("{0:#,0}",responseData.changedAppraisedPriceByAction)} G";
-        // 찾은 등급값 표시
-        currentFlawObjs.transform.GetChild(2).GetChild(1).GetComponent<TMP_Text>().text 
-                = $"{responseData.foundFlawEa}개";
-        // 남은 돈 표시
-        gameSessionManager.SetLeftMoney(responseData.leftMoney); 
-        // 다이얼로그
-        DialogueManager.Instance.
-            PutDialogue($"<속마음> 흠 찾기로 {responseData.foundFlawEa}개를 찾아냈다.\n좀 더 찾을 수도 있지 않을까?");
+                // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 흠 찾기 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    /* 업데이트 */
+                    // 총 구매가 & 감정가
+                    UpdateTotalPrice(responseData.totalPurchasePrice, responseData.totalAppraisedPrice);
+                    // 구매가 변동값
+                    currentFlawObjs.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text 
+                            =$"{string.Format("{0:#,0}",responseData.changedPurchasedPriceByAction)} G";
+                    // 감정가 변동값
+                    currentFlawObjs.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text 
+                            =$"{string.Format("{0:#,0}",responseData.changedAppraisedPriceByAction)} G";
+                    // 찾은 등급값 표시
+                    currentFlawObjs.transform.GetChild(2).GetChild(1).GetComponent<TMP_Text>().text 
+                            = $"{responseData.foundFlawEa}개";
+                    // 남은 돈 표시
+                    gameSessionManager.SetLeftMoney(responseData.leftMoney); 
+                    // 다이얼로그
+                    DialogueManager.Instance.
+                        PutDialogue($"<속마음> 흠 찾기로 {responseData.foundFlawEa}개를 찾아냈다.\n좀 더 찾을 수도 있지 않을까?");
+                }
+            }
+        );
     }
 
     public void OnFindAuth()
@@ -477,38 +553,52 @@ public class DealManager : MonoBehaviour
         requestData.actionLevel = 0;
 
         // 실제 데이터 요청
-        // DealActionResponse responseData =TransmissionManager.Instance.RequestToServer<DealActionRequest,DealActionResponse>(RequestType.DEAL_ACTION,requestData);
-        
-        // 테스트용 데이터 <<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/11dealAction_auth.json", typeof(TextAsset));
-        DealActionResponse responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
-
-        /* 업데이트 */
-        // 총 구매가 & 감정가
-        UpdateTotalPrice(responseData.totalPurchasePrice, responseData.totalAppraisedPrice);
-        // 구매가 변동값
-        currentAuthObjs.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text 
-                =$"{string.Format("{0:#,0}",responseData.changedPurchasedPriceByAction)} G";
-        // 감정가 변동값
-        currentAuthObjs.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text 
-                =$"{string.Format("{0:#,0}",responseData.changedAppraisedPriceByAction)} G";
-        // 찾은 등급값 표시
-        currentAuthObjs.transform.GetChild(2).GetChild(1).GetComponent<TMP_Text>().text 
-                = ConvertAuthToString((Authenticity)responseData.foundAuthenticity);
-        // 남은 돈 표시
-        gameSessionManager.SetLeftMoney(responseData.leftMoney); 
-        // 다이얼로그
-        string message;
-        if(responseData.foundAuthenticity == 0) // 가품
-        {
-            message = $"<속마음> 등급 감정으로 {ConvertAuthToString((Authenticity)responseData.foundAuthenticity)}라는 것을 알아냈다.\n 복원할 때 알아냈으면 엄청난 손해를 볼 뻔 했어..";
-        }
-        else // 진품
-        {
-            message = $"<속마음> 등급 감정으로 {ConvertAuthToString((Authenticity)responseData.foundAuthenticity)}라는 것을 알아냈다.\n";            
-        }
-        // 다이얼로그
-        DialogueManager.Instance.PutDialogue(message);
+        TransmissionManager.Instance.RequestToServer<DealActionRequest,DealActionResponse>(
+            RequestType.DEAL_ACTION,
+            requestData,
+            (responseCode, responseData) =>
+            {
+                // 테스트용 데이터 <<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_auth.json");
+                responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
+                // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 진위 판정 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    /* 업데이트 */
+                    // 총 구매가 & 감정가
+                    UpdateTotalPrice(responseData.totalPurchasePrice, responseData.totalAppraisedPrice);
+                    // 구매가 변동값
+                    currentAuthObjs.transform.GetChild(3).GetChild(1).GetComponent<TMP_Text>().text 
+                            =$"{string.Format("{0:#,0}",responseData.changedPurchasedPriceByAction)} G";
+                    // 감정가 변동값
+                    currentAuthObjs.transform.GetChild(4).GetChild(1).GetComponent<TMP_Text>().text 
+                            =$"{string.Format("{0:#,0}",responseData.changedAppraisedPriceByAction)} G";
+                    // 찾은 등급값 표시
+                    currentAuthObjs.transform.GetChild(2).GetChild(1).GetComponent<TMP_Text>().text 
+                            = ConvertAuthToString((Authenticity)responseData.foundAuthenticity);
+                    // 남은 돈 표시
+                    gameSessionManager.SetLeftMoney(responseData.leftMoney); 
+                    // 다이얼로그
+                    string message;
+                    if(responseData.foundAuthenticity == 0) // 가품
+                    {
+                        message = $"<속마음> 등급 감정으로 {ConvertAuthToString((Authenticity)responseData.foundAuthenticity)}라는 것을 알아냈다.\n 복원할 때 알아냈으면 엄청난 손해를 볼 뻔 했어..";
+                    }
+                    else // 진품
+                    {
+                        message = $"<속마음> 등급 감정으로 {ConvertAuthToString((Authenticity)responseData.foundAuthenticity)}라는 것을 알아냈다.\n";            
+                    }
+                    // 다이얼로그
+                    DialogueManager.Instance.PutDialogue(message);   
+                }
+            }
+        );
     }
 
     public void OpenItemHint(int posKey)
@@ -518,24 +608,39 @@ public class DealManager : MonoBehaviour
         requestData.itemKey = currentDealData.itemKey;
 
         // 실제 데이터 요청
-        //ItemHintResponse responseData =TransmissionManager.Instance.RequestToServer<ItemHintRequest,ItemHintResponse>(RequestType.GET_ITEM_HINTS,requestData);
-        
-        // 테스트용 데이터 <<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/9itemHind.json", typeof(TextAsset));
-        ItemHintResponse responseData =JsonUtility.FromJson<ItemHintResponse>(jsonFile.text);
+        TransmissionManager.Instance.RequestToServer<ItemHintRequest,ItemHintResponse>(
+            RequestType.GET_ITEM_HINTS,
+            requestData,
+            (responseCode, responseData) =>
+            {
+                // 테스트용 데이터 <<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/9itemHind.json");
+                responseData =JsonUtility.FromJson<ItemHintResponse>(jsonFile.text);
 
-        /* 받아서 처리 -> 텍스트에 담기 */
-        // 힌트 이름
-        currentItemHintObjs.transform.GetChild(posKey).GetChild(0).GetComponent<TMP_Text>().text = responseData.hintName;
-        // 힌트 값
-        currentItemHintObjs.transform.GetChild(posKey).GetChild(1).GetComponent<TMP_Text>().text = responseData.hintValue;
-        // 남은 돈 표시
-        gameSessionManager.SetLeftMoney(responseData.leftMoney); 
+                // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 아이템 힌트 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    /* 받아서 처리 -> 텍스트에 담기 */
+                    // 힌트 이름
+                    currentItemHintObjs.transform.GetChild(posKey).GetChild(0).GetComponent<TMP_Text>().text = responseData.hintName;
+                    // 힌트 값
+                    currentItemHintObjs.transform.GetChild(posKey).GetChild(1).GetComponent<TMP_Text>().text = responseData.hintValue;
+                    // 남은 돈 표시
+                    gameSessionManager.SetLeftMoney(responseData.leftMoney); 
 
-        // 다이얼로그
-        DialogueManager.Instance.PutDialogue($"<속마음>{responseData.hintName}는 {responseData.hintValue}정도군.. ");
-        // 아이템 힌트 버튼 SetActive(false) 때리기
-        currentItemHintObjs.transform.GetChild(posKey).GetChild(2).gameObject.SetActive(false);
+                    // 다이얼로그
+                    DialogueManager.Instance.PutDialogue($"<속마음>{responseData.hintName}는 {responseData.hintValue}정도군.. ");
+                    // 아이템 힌트 버튼 SetActive(false) 때리기
+                    currentItemHintObjs.transform.GetChild(posKey).GetChild(2).gameObject.SetActive(false);
+                }
+            }    
+        );
     }
 
     public void OpenCustomerHint(int posKey)
@@ -557,25 +662,40 @@ public class DealManager : MonoBehaviour
         }
 
         // 실제 데이터 요청
-        // RevealCustomerResponse responseData =TransmissionManager.Instance.RequestToServer<RevealCustomerRequest,RevealCustomerResponse>(RequestType.CUS_REVEAL,requestData);
-        
-        // 테스트용 데이터 <<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/8revealCustomer.json", typeof(TextAsset));
-        RevealCustomerResponse responseData =JsonUtility.FromJson<RevealCustomerResponse>(jsonFile.text);
+        TransmissionManager.Instance.RequestToServer<RevealCustomerRequest,RevealCustomerResponse>(
+            RequestType.CUS_REVEAL,
+            requestData,
+            (responseCode, responseData) =>
+            {
+                // 테스트용 데이터 <<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/8revealCustomer.json");
+                responseData =JsonUtility.FromJson<RevealCustomerResponse>(jsonFile.text);
 
-        /* 받아서 처리 -> 텍스트에 담기 */
-        // 힌트 이름
-        currentCusHintObjs.transform.GetChild(3+posKey).GetChild(0).GetComponent<TMP_Text>().text
-            = ConvertCustomerAttributeToString(responseData.attribute);
-        // 힌트 값
-        currentCusHintObjs.transform.GetChild(3+posKey).GetChild(1).GetComponent<TMP_Text>().text
-            = $"{responseData.value*100}%";
-        // 남은 돈 표시
-        gameSessionManager.SetLeftMoney(responseData.leftMoney); 
-        // 다이얼로그
-        DialogueManager.Instance.PutDialogue($"<속마음>{ConvertCustomerAttributeToString(responseData.attribute)}는 {responseData.value*100}%정도군.. ");
-        // 고객 힌트 버튼 SetActive(false) 때리기
-        currentCusHintObjs.transform.GetChild(3+posKey).GetChild(2).gameObject.SetActive(false);
+                // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 고객 힌트 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    /* 받아서 처리 -> 텍스트에 담기 */
+                    // 힌트 이름
+                    currentCusHintObjs.transform.GetChild(3+posKey).GetChild(0).GetComponent<TMP_Text>().text
+                        = ConvertCustomerAttributeToString(responseData.attribute);
+                    // 힌트 값
+                    currentCusHintObjs.transform.GetChild(3+posKey).GetChild(1).GetComponent<TMP_Text>().text
+                        = $"{responseData.value*100}%";
+                    // 남은 돈 표시
+                    gameSessionManager.SetLeftMoney(responseData.leftMoney); 
+                    // 다이얼로그
+                    DialogueManager.Instance.PutDialogue($"<속마음>{ConvertCustomerAttributeToString(responseData.attribute)}는 {responseData.value*100}%정도군.. ");
+                    // 고객 힌트 버튼 SetActive(false) 때리기
+                    currentCusHintObjs.transform.GetChild(3+posKey).GetChild(2).gameObject.SetActive(false);                    
+                }
+            }
+        );
     }
 
     private void ActivateAllItemHintButton()
@@ -754,61 +874,91 @@ public class DealManager : MonoBehaviour
         requestData.customerKey = currentDealData.customerKey;
         
         // 요청하고 결과값 받기 -> 서버 있어야 받을 수 있음
-        // SellStartResponse responseData =TransmissionManager.Instance.RequestToServer<SellStartRequest,SellStartResponse>(RequestType.ITEM_SELL_START,requestData);
-
-        // 테스트용 데이터 사용 <<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/16itemSellStart.json", typeof(TextAsset));
-        SellStartResponse responseData =JsonUtility.FromJson<SellStartResponse>(jsonFile.text);
-        // 아이템 키를 받았을테니까 여기서 
-        int posKey = -1;
-        for(int i = 0; i < displaysMap.Count; ++i)
-        {
-            if(displaysMap[i].itemKey == responseData.itemKey)
+        TransmissionManager.Instance.RequestToServer<SellStartRequest,SellStartResponse>(
+            RequestType.ITEM_SELL_START,
+            requestData,
+            (responseCode, responseData) =>
+            {
+                // 테스트용 데이터 사용 <<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/16itemSellStart.json");
+                responseData =JsonUtility.FromJson<SellStartResponse>(jsonFile.text);
+                // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
                 {
-                    posKey = i;
-                    break;
+                    string errorMessage = "통신 오류: 판매 시작 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
                 }
-        }
-        if(posKey == -1)
-        {
-            ConfirmPopuper.Instance.PopupCheckPanel("해당 전시장 위치에 아이템이 없습니다.");
-        }
-        // posKey = 0; // 디버깅용 코드 <<<
-        // 전역 현재 판매 데이터 세팅
-        currentSellItem.customerKey = currentDealData.customerKey;
-        currentSellItem.itemKey = responseData.itemKey;
-        //이미지 세팅
-        ItemCatalogData iData=SingletonManager.Instance.GetItemCatalog(displaysMap[posKey].itemCatalogKey);
-        sellObjs.transform.GetChild(0).GetChild(1).GetChild(0).GetChild(0).GetComponent<Image>().sprite
-            = Resources.Load<Sprite>($"IMG_ITEM_CATALOG/{iData.imgId}");
-        // 텍스트 세팅
-        sellObjs.transform.GetChild(0).GetChild(2).GetChild(0).GetChild(1).GetComponent<TMP_Text>().text =$"{responseData.sellingPrice}";  
-        // 다이얼로그
-        DialogueManager.Instance.PutDialogue("<고객> 이 아이템의 테마가 저랑 잘 어울리는 것 같아요.\n 구매하고 싶네요");
+                else
+                {
+                    // 아이템 키를 받았을테니까 여기서 
+                    int posKey = -1;
+                    for(int i = 0; i < displaysMap.Count; ++i)
+                    {
+                        if(displaysMap[i].itemKey == responseData.itemKey)
+                            {
+                                posKey = i;
+                                break;
+                            }
+                    }
+                    if(posKey == -1)
+                    {
+                        ConfirmPopuper.Instance.PopupCheckPanel("해당 전시장 위치에 아이템이 없습니다.");
+                    }
+                    // posKey = 0; // 디버깅용 코드 <<<
+                    // 전역 현재 판매 데이터 세팅
+                    currentSellItem.customerKey = currentDealData.customerKey;
+                    currentSellItem.itemKey = responseData.itemKey;
+                    //이미지 세팅
+                    ItemCatalogData iData=SingletonManager.Instance.GetItemCatalog(displaysMap[posKey].itemCatalogKey);
+                    sellObjs.transform.GetChild(0).GetChild(1).GetChild(0).GetChild(0).GetComponent<Image>().sprite
+                        = Resources.Load<Sprite>($"IMG_ITEM_CATALOG/{iData.imgId}");
+                    // 텍스트 세팅
+                    sellObjs.transform.GetChild(0).GetChild(2).GetChild(0).GetChild(1).GetComponent<TMP_Text>().text =$"{responseData.sellingPrice}";  
+                    // 다이얼로그
+                    DialogueManager.Instance.PutDialogue("<고객> 이 아이템의 테마가 저랑 잘 어울리는 것 같아요.\n 구매하고 싶네요");
+
+                }
+            }
+        );
     }
 
 
     public void OnDecideToSellItem()
     {
         // 서버에 전달하기 sellComplete
-        // SellCompleteResponse responseData =TransmissionManager.Instance.RequestToServer<SellCompleteRequest,SellCompleteResponse>(RequestType.ITEM_SELL_COMPLETE,currentSellItem);
-
-        // 테스트용 데이터 사용 <<<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/17sellComplete.json", typeof(TextAsset));
-        SellCompleteResponse responseData =JsonUtility.FromJson<SellCompleteResponse>(jsonFile.text);
-
-        // 디스플레이 아이템에서 삭제
-        itemDisplayManager.RemoveDisplayedItem(responseData.displayedPositionKey);
-        // 돈 업데이트
-        gameSessionManager.SetLeftMoney(responseData.leftMoney); 
-        // 팝업창 띄우기
-        ConfirmPopuper.Instance.
-            PopupCheckPanel
-                ($"고객 직접 판매를 통해 {string.Format("{0:#,0}",responseData.earnedAmount)} G를 획득하였습니다!");
-        DialogueManager.Instance.PutDialogue(sellCompleteDialogues[Random.Range(0,sellCompleteDialogues.Length)]);
-        // 판매 오브젝트 끄기
-        deseBlackFilter.SetActive(false);
-        sellObjs.SetActive(false);
+        TransmissionManager.Instance.RequestToServer<SellCompleteRequest,SellCompleteResponse>(
+            RequestType.ITEM_SELL_COMPLETE,
+            currentSellItem,
+            (responseCode, responseData) =>
+            {
+                // 테스트용 데이터 사용 <<<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/17sellComplete.json");
+                responseData =JsonUtility.FromJson<SellCompleteResponse>(jsonFile.text);
+                // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 판매 결정 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    // 디스플레이 아이템에서 삭제
+                    itemDisplayManager.RemoveDisplayedItem(responseData.displayedPositionKey);
+                    // 돈 업데이트
+                    gameSessionManager.SetLeftMoney(responseData.leftMoney); 
+                    // 팝업창 띄우기
+                    ConfirmPopuper.Instance.
+                        PopupCheckPanel
+                            ($"고객 직접 판매를 통해 {string.Format("{0:#,0}",responseData.earnedAmount)} G를 획득하였습니다!");
+                    DialogueManager.Instance.PutDialogue(sellCompleteDialogues[Random.Range(0,sellCompleteDialogues.Length)]);
+                    // 판매 오브젝트 끄기
+                    deseBlackFilter.SetActive(false);
+                    sellObjs.SetActive(false);
+                }
+            }
+        );
     }
 
     public void OnDenyToSellItem()
@@ -819,15 +969,29 @@ public class DealManager : MonoBehaviour
         requestData.customerKey = currentSellItem.customerKey;
 
         // 서버에 전달
-        TransmissionManager.Instance.RequestToServer<SellCancelRequest, int>(RequestType.ITEM_SELL_CANCEL, requestData);
-
-        // 고객 상태 -> 거래 상태로 바꾸기
-        SingletonManager.Instance.IsCustomerDealState = CustomerState.Deal;
-        // 거래 패널 세팅하기
-        SetDealPanelToNewData(dailyDealsList[currentDealIndex], true);
-        // 판매 오브젝트 끄기
-        deseBlackFilter.SetActive(false);
-        sellObjs.SetActive(false);
+        TransmissionManager.Instance.RequestToServer<SellCancelRequest, int>(
+            RequestType.ITEM_SELL_CANCEL,
+            requestData,
+            (responseCode, responseData) =>
+            {
+                // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 판매 거부 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    // 고객 상태 -> 거래 상태로 바꾸기
+                    SingletonManager.Instance.IsCustomerDealState = CustomerState.Deal;
+                    // 거래 패널 세팅하기
+                    SetDealPanelToNewData(dailyDealsList[currentDealIndex], true);
+                    // 판매 오브젝트 끄기
+                    deseBlackFilter.SetActive(false);
+                    sellObjs.SetActive(false);
+                }
+            }
+        );
     }
 
     private string ConvertCustomerAttributeToString(string attribute)
@@ -893,48 +1057,62 @@ public class DealManager : MonoBehaviour
         requestData.itemKey = currentDealData.itemKey;
         requestData.drcKey = currentDealData.drcKey;
         // 서버에 요청하고 데이터 받아오기
-        // DealCompleteResponse responseData =TransmissionManager.Instance.RequestToServer<DealCompleteRequest,DealCompleteResponse>(RequestType.DEAL_COMPLETE,requestData);
+        TransmissionManager.Instance.RequestToServer<DealCompleteRequest,DealCompleteResponse>(
+            RequestType.DEAL_COMPLETE,
+            requestData,
+            (responseCode, responseData) =>
+            {
+                // 테스트용 데이터 사용
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/12dealComplete.json");
+                 responseData =JsonUtility.FromJson<DealCompleteResponse>(jsonFile.text);
+                // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 거래 결정 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    dealDecideActionResponseData = responseData; // 전역변수에 저장해서 다같이 봐
 
-        // 테스트용 데이터 사용
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/12dealComplete.json", typeof(TextAsset));
-        DealCompleteResponse responseData =JsonUtility.FromJson<DealCompleteResponse>(jsonFile.text);
+                    // 거래 성공 시
+                    if(responseData.dealSuccess =="Y")
+                    {
+                        // 거래 성공에 대한 클라 업데이트하기
+                        // 전시장 아이템 추가
+                        // 거래 다음으로 넘어가기 위해서 여기 주석처리하면 됨 <<<<<<<<<<<<<<<<<<<<
+                        itemDisplayManager.AddDisplayedItem(responseData.displayedItem.displayPositionKey, responseData.displayedItem);
+                        // 남은 돈 표시
+                        gameSessionManager.SetLeftMoney(responseData.leftMoney); 
 
-        dealDecideActionResponseData = responseData; // 전역변수에 저장해서 다같이 봐
-
-        // 거래 성공 시
-        if(responseData.dealSuccess =="Y")
-        {
-            // 거래 성공에 대한 클라 업데이트하기
-            // 전시장 아이템 추가
-            // 거래 다음으로 넘어가기 위해서 여기 주석처리하면 됨 <<<<<<<<<<<<<<<<<<<<
-            itemDisplayManager.AddDisplayedItem(responseData.displayedItem.displayPositionKey, responseData.displayedItem);
-            // 남은 돈 표시
-            gameSessionManager.SetLeftMoney(responseData.leftMoney); 
-
-            // 거래 창 끄기
-            deseBlackFilter.SetActive(false); 
-            dealObjs.SetActive(false);
-            // 거래 성공 확인 팝업창 띄우기
-            ConfirmPopuper.Instance.PopupCheckPanel("거래에 성공하였습니다!");
-            // 다이얼로그
-            DialogueManager.Instance.PutDialogue(dealSuccessDialogues[Random.Range(0,dealSuccessDialogues.Length)]);
-            // 다음 거래로 이동
-            currentDealIndex++; 
-            // 다음 행동 정하기
-            if(currentDealIndex >= dailyDealsList.Count || responseData.isDayNext == "Y") // 모든 거래 다 함
-            {// 오늘 거래 다했는지 체크
-                PopupFinalizeObjs(); // 정산화면 띄우기
+                        // 거래 창 끄기
+                        deseBlackFilter.SetActive(false); 
+                        dealObjs.SetActive(false);
+                        // 거래 성공 확인 팝업창 띄우기
+                        ConfirmPopuper.Instance.PopupCheckPanel("거래에 성공하였습니다!");
+                        // 다이얼로그
+                        DialogueManager.Instance.PutDialogue(dealSuccessDialogues[Random.Range(0,dealSuccessDialogues.Length)]);
+                        // 다음 거래로 이동
+                        currentDealIndex++; 
+                        // 다음 행동 정하기
+                        if(currentDealIndex >= dailyDealsList.Count || responseData.isDayNext == "Y") // 모든 거래 다 함
+                        {// 오늘 거래 다했는지 체크
+                            PopupFinalizeObjs(); // 정산화면 띄우기
+                        }
+                        else { // 다음 거래 준비
+                            SetDealPanelToNewData(dailyDealsList[currentDealIndex]);
+                        }        
+                    }
+                    else // 거래 성사 실패 시(돈 부족 등)
+                    {
+                        // 거래 실패 확인 팝업창 띄우기
+                        ConfirmPopuper.Instance.PopupCheckPanel("거래에 실패하였습니다.\n남은 돈을 확인해보세요");   
+                        DialogueManager.Instance.PutDialogue("돈이 없다구요?");
+                    } 
+                }
             }
-            else { // 다음 거래 준비
-                SetDealPanelToNewData(dailyDealsList[currentDealIndex]);
-            }        
-        }
-        else // 거래 성사 실패 시(돈 부족 등)
-        {
-            // 거래 실패 확인 팝업창 띄우기
-            ConfirmPopuper.Instance.PopupCheckPanel("거래에 실패하였습니다.\n남은 돈을 확인해보세요");   
-            DialogueManager.Instance.PutDialogue("돈이 없다구요?");
-        } 
+        );
     }
 
     private void PopupFinalizeObjs()
@@ -987,30 +1165,44 @@ public class DealManager : MonoBehaviour
         requestData.itemKey = currentDealData.itemKey;
         requestData.drcKey = currentDealData.drcKey;
         // 서버에 요청하고 데이터 받아오기
-        // DealCompleteResponse responseData =TransmissionManager.Instance.RequestToServer<DealCompleteRequest,DealCompleteResponse>(RequestType.DEAL_CANCEL,requestData);
+        TransmissionManager.Instance.RequestToServer<DealCompleteRequest,DealCompleteResponse>(
+            RequestType.DEAL_CANCEL,
+            requestData,
+            (responseCode, responseData) =>
+            {
+                // 테스트용 데이터 사용
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/12dealCancelLeftDeal.json");
+                responseData =JsonUtility.FromJson<DealCompleteResponse>(jsonFile.text);
+                // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 거래 거부 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    dealDecideActionResponseData = responseData; // 전역변수에 저장해서 다같이 봐
 
-        // 테스트용 데이터 사용
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/12dealCancelLeftDeal.json", typeof(TextAsset));
-        DealCompleteResponse responseData =JsonUtility.FromJson<DealCompleteResponse>(jsonFile.text);
-        
-        dealDecideActionResponseData = responseData; // 전역변수에 저장해서 다같이 봐
-
-        // 거래 창 끄기
-        deseBlackFilter.SetActive(false); 
-        dealObjs.SetActive(false);
-        // 거래 거부 성공 확인 팝업창 띄우기
-        ConfirmPopuper.Instance.PopupCheckPanel(denyDealDialogueList[Random.Range(0,denyDealDialogueList.Length)]);
-        DialogueManager.Instance.PutDialogue(denyDealDialogues[Random.Range(0,denyDealDialogues.Length)]);
-        // 다음 거래로 이동
-        currentDealIndex++; 
-        // 다음 행동 정하기
-        if(currentDealIndex >= dailyDealsList.Count || responseData.isDayNext == "Y") // 모든 거래 다 함
-        {// 오늘 거래 다했는지 체크
-            PopupFinalizeObjs(); // 정산화면 띄우기
-        }
-        else { // 다음 거래 준비
-            SetDealPanelToNewData(dailyDealsList[currentDealIndex]);
-        }        
+                    // 거래 창 끄기
+                    deseBlackFilter.SetActive(false); 
+                    dealObjs.SetActive(false);
+                    // 거래 거부 성공 확인 팝업창 띄우기
+                    ConfirmPopuper.Instance.PopupCheckPanel(denyDealDialogueList[Random.Range(0,denyDealDialogueList.Length)]);
+                    DialogueManager.Instance.PutDialogue(denyDealDialogues[Random.Range(0,denyDealDialogues.Length)]);
+                    // 다음 거래로 이동
+                    currentDealIndex++; 
+                    // 다음 행동 정하기
+                    if(currentDealIndex >= dailyDealsList.Count || responseData.isDayNext == "Y") // 모든 거래 다 함
+                    {// 오늘 거래 다했는지 체크
+                        PopupFinalizeObjs(); // 정산화면 띄우기
+                    }
+                    else { // 다음 거래 준비
+                        SetDealPanelToNewData(dailyDealsList[currentDealIndex]);
+                    }                            
+                }
+            }
+        );
     }
 
     private void SetNextDaySetting()

@@ -1,12 +1,7 @@
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
-using Unity.Jobs;
-using UnityEngine.UI;
-using UnityEngine.UIElements;
 using System;
-using UnityEditor.Compilation;
-using UnityEngine.SceneManagement;
 
 public enum RequestType{
     REGISTER,           // POST /player/register
@@ -46,219 +41,109 @@ public class TransmissionManager : MonoBehaviour
         sessionToken = sessionTokStr;
     }
 
-    public S RequestToServer<T,S>(RequestType reqType,T requestData){
+    public void RequestToServer<T,S>(
+        RequestType reqType,
+        T requestData,
+        Action<int, S> onCompleted // 응답 객체를 콜백으로 전달하기. 응답 다 되면 여기에 값이 콜백으로 갈 것임
+    ){
         string routeUrl ="";
-        int returnedResponseCode = -1;
-        S returnData= default;
         switch(reqType){
             case RequestType.REGISTER: // POST /player/register
                 routeUrl = "/player/register";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        // 얘는 결과값을 안 받으니 리스폰스 코드(200,404 ...)로 반환함
-                        returnData = (S)(object)responseCode; // 오브젝트 최상위로 한번 포장하고 제네릭으로 변환
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,onCompleted));
                 break;
             case RequestType.LOGIN: // POST /player/login
                 routeUrl = "/player/login";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,onCompleted));
                 break;
             case RequestType.LOGOUT: // POST /player/logout
                 routeUrl = "/player/logout";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        // 얘는 결과값을 안 받으니 리스폰스 코드(200,404 ...)로 반환함
-                        returnData = (S)(object)responseCode; // 오브젝트 최상위로 한번 포장하고 제네릭으로 변환
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,onCompleted));
                 break;
             case RequestType.NEW_SESSION: // POST /game-session/new
                 routeUrl = "/game-session/new";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted));
                 break;
             case RequestType.LATEST_SESSION: // POST /game-session/latest
                 routeUrl = "/game-session/latest";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted));
                 break;
             case RequestType.INIT_CATALOGS: // GET /catalog/initialData
                 routeUrl = "/catalog/initialData";
-                StartCoroutine(GetJsonValue<S>(routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(GetJsonValue<S>(routeUrl, onCompleted));
                 break;
             case RequestType.DISPLAY_CUR_ALL: // GET /display/currentAll
                 routeUrl = "/display/currentAll";
-                StartCoroutine(GetJsonValue<S>(routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(GetJsonValue<S>(routeUrl, onCompleted));
                 break;
             case RequestType.NEWS_CUR: // GET /news/current
                 routeUrl = "/news/current";
-                StartCoroutine(GetJsonValue<S>(routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(GetJsonValue<S>(routeUrl, onCompleted));
                 break;
             case RequestType.CUS_REVEAL: // PATCH /customer/reveal
                 routeUrl = "/customer/reveal";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted, true));
                 break;
             case RequestType.GET_ITEM_HINTS: // GET /item/getHints
                 routeUrl = "/item/getHints";
-                StartCoroutine(GetJsonValue<S>(routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(GetJsonValue<S>(routeUrl, onCompleted));
                 break;
             case RequestType.ITEM_ACTION: // POST /item/action
                 routeUrl = "/item/action";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted));
                 break;
             case RequestType.ITEM_RESULT: // POST /item/result
                 routeUrl = "/item/result";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted));
                 break;
             case RequestType.ITEM_SELL_START: // POST /item/sellStart
                 routeUrl = "/item/sellStart";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted));
                 break;
             case RequestType.ITEM_SELL_CANCEL: // POST /item/sellCancel
                 routeUrl = "/item/sellCancel";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted));
                 break;
             case RequestType.ITEM_SELL_COMPLETE: // POST /item/sellComplete
                 routeUrl = "/item/sellComplete";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted));
                 break;
             case RequestType.DAILY_DEALS: // POST /deal/loadOrGenerateDailyDeals
                 routeUrl = "/deal/loadOrGenerateDailyDeals";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted));
                 break;
             case RequestType.DEAL_ACTION: // POST /deal/action
                 routeUrl = "/deal/action";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted));
                 break;
             case RequestType.DEAL_COMPLETE: // POST /deal/complete
                 routeUrl = "/deal/complete";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted));
                 break;
             case RequestType.LOAN_UPDATE: // POST /loan/update
                 routeUrl = "/loan/update";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted));
                 break;
             case RequestType.DEAL_CANCEL: // POST /deal/cancel
                 routeUrl = "/deal/cancel";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        // 얘는 결과값을 안 받으니 리스폰스 코드(200,404 ...)로 반환함
-                        returnData = (S)(object)responseCode; // 오브젝트 최상위로 한번 포장하고 제네릭으로 변환
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted));
                 break;
             case RequestType.WORLD_RECORDS: // GET /worldRecords
                 routeUrl = "/worldRecords";
-                StartCoroutine(GetJsonValue<S>(routeUrl,
-                    (responseCode, responseData) =>
-                    {
-                        returnData = responseData;
-                        returnedResponseCode = responseCode;
-                    }));
+                StartCoroutine(GetJsonValue<S>(routeUrl, onCompleted));
                 break;
         }
-        // returnedResponseCode = 401; // <<<<< 디버깅용 코드
-        // 401 Unauthorized 
-        if(returnedResponseCode == 401)
-        {
-            ConfirmPopuper.Instance.
-                PopupCheckPanel("세션토큰이 만료되었습니다.\n로그인 화면으로 이동합니다.",
-                                                ()=>{loginManager.ResetToLoginScreen();});
-        }
-        else if(returnedResponseCode != 200)
-        {
-            // ConfirmPopuper.Instance.
-            //     PopupCheckPanel("통신 오류가 발생하였습니다.");
-        }
+    }
 
-        return returnData;
+    public void OnHandleErrorResponseCode(int responseCode, string errorMessage)
+    {
+        if (ConfirmPopuper.Instance == null && loginManager == null) { return; }
+
+        if(responseCode == 401)
+        {            
+            errorMessage = "세션토큰이 만료되었습니다.\n로그인 화면으로 이동합니다.";
+        }
+        ConfirmPopuper.Instance.PopupCheckPanel(errorMessage, ()=>{loginManager.ResetToLoginScreen();});
     }
 
     // 인자로 전달한 파라미터에 결과값 담아서 줄게
@@ -275,18 +160,26 @@ public class TransmissionManager : MonoBehaviour
             }
             // 통신 시도
             yield return req.SendWebRequest(); // 여기서 실제로 요청을 전송하는 거임
+
+            // 결과 응답 코드 확인
+            int resCode = (int)req.responseCode;
+            // 결과 처리
             if(req.result != UnityWebRequest.Result.Success) // 에러 발생
             {
                 Debug.LogError("its failed to fetch Json Data");
+                callback(resCode, default);
             }
             else // 성공 시
             {
                 // 결과를 담기
-                int resCode = (int)req.responseCode;
                 string jsonVal = req.downloadHandler.text;
+                S resData = default;
+                if (!string.IsNullOrEmpty(jsonVal))
+                {
+                    resData = JsonUtility.FromJson<S>(jsonVal);
+                }
                 // 결과값 담아서 주기
-                callback(resCode,JsonUtility.FromJson<S>(jsonVal));
-                
+                callback(resCode, resData);
             }
         }
     }
@@ -301,7 +194,6 @@ public class TransmissionManager : MonoBehaviour
         {
             jsonData = JsonUtility.ToJson(requestData);            
         }
-
 
         // url 설정
         string url= serverUrl+routeUrl;
@@ -323,24 +215,25 @@ public class TransmissionManager : MonoBehaviour
             }
             // 통신 시도
             yield return req.SendWebRequest(); 
-            if(req.error == null) // 성공 시
+
+            int resCode = (int)req.responseCode;
+            // 결과 처리
+            if(req.result != UnityWebRequest.Result.Success) // 에러 발생
             {
-                Debug.Log("Post Data Success");
-                // 다운로드 핸들러에서 결과물 받아 사용
-                if (req.responseCode == 200 && !string.IsNullOrEmpty(req.downloadHandler.text))
-                {
-                    int resCode = (int)req.responseCode;
-                    string jsonVal = req.downloadHandler.text;
-                    // 받은 결과물을 결과물 컨테이너 담아서 종료
-                    callback(resCode,JsonUtility.FromJson<S>(jsonVal));
-                }
-                else{
-                    Debug.LogError("Post Data Error Request 400 500 ...");
-                }
+                Debug.LogError("its failed to fetch Json Data");
+                callback(resCode, default);
             }
-            else // 실패 시
+            else // 성공 시
             {
-                Debug.LogError("Post Data Error No Response");
+                // 결과를 담기
+                string jsonVal = req.downloadHandler.text;
+                S resData = default;
+                if (!string.IsNullOrEmpty(jsonVal))
+                {
+                    resData = JsonUtility.FromJson<S>(jsonVal);
+                }
+                // 결과값 담아서 주기
+                callback(resCode, resData);
             }
         }
     }
@@ -387,12 +280,3 @@ public class TransmissionManager : MonoBehaviour
         }
     }
 }
-
-public class MyData
-{
-    public string userId="";
-    public string id="";
-    public string title="";
-    public string completed = "";
-}
-

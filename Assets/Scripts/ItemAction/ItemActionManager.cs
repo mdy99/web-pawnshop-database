@@ -1,11 +1,8 @@
 using UnityEngine;
-using System.Linq;
 using AYellowpaper.SerializedCollections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using TMPro;
-using UnityEditor;
-using Unity.VisualScripting;
 
 public enum DebtGoldUnit
 {
@@ -70,32 +67,46 @@ public class ItemActionManager : MonoBehaviour
         // 금액 세팅(개인 빚은 무조건 상환)
         requestData.amount = -1 * (int)currentPersonalDebtGoldClickedUnit;
         // 요청 데이터 보내고 반환 데이터 받기
-        // LoanUpdateResponse responseData =TransmissionManager.Instance.RequestToServer<LoanUpdateRequest,LoanUpdateResponse>(RequestType.LOAN_UPDATE,requestData);
-        
-        // 테스트용 데이터 <<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/18loanUpdatePersonal.json", typeof(TextAsset));
-        LoanUpdateResponse responseData =JsonUtility.FromJson<LoanUpdateResponse>(jsonFile.text);
-
-        /* 결과 데이터 UI 업데이트하기 */
-        // 돈 업데이트
-        gameSessionManager.SetLeftMoney(responseData.leftMoney);
-        // 가게빚 UI 업데이트
-        UpdateDebtValue(responseData.leftDebtAmount, 0);
-        // 팝업창 띄우기
-        string log = $"개인 빚 {string.Format("{0:#,0}",(int)currentPersonalDebtGoldClickedUnit)}G을 상환하였습니다.";
-        ConfirmPopuper.Instance.PopupCheckPanel(log);
-        DialogueManager.Instance.PutDialogue("<속마음> 이정도 갚았나..\n 모든 빚을 다 갚으면 모든 목적을 이룬 걸 거야..");
-        // 게임 클리어 됐는지 체크
-        if(responseData.isGameCleared == "Y")
-        { 
-            // 뉴스 패널 끄기
-            toggleObjsManager.TurnOffNewsObjs();
-            
-            // 게임 클리어 화면 데이터 세팅하기
-            gameSessionManager.PopupGameEndObjs(responseData.worldRecord, 
-            "모든 빚을 다 상환하여 게임을 클리어하였습니다!!!");
-            DialogueManager.Instance.PutDialogue("<주인> 다 갚았다!!");
-        }
+        TransmissionManager.Instance.RequestToServer<LoanUpdateRequest,LoanUpdateResponse>(
+            RequestType.LOAN_UPDATE,
+            requestData,
+            (responseCode, responseData) =>
+            {
+                // 테스트용 데이터 <<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/18loanUpdatePersonal.json");
+                responseData =JsonUtility.FromJson<LoanUpdateResponse>(jsonFile.text);
+                // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 개인 빚 상환 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    /* 결과 데이터 UI 업데이트하기 */
+                    // 돈 업데이트
+                    gameSessionManager.SetLeftMoney(responseData.leftMoney);
+                    // 가게빚 UI 업데이트
+                    UpdateDebtValue(responseData.leftDebtAmount, 0);
+                    // 팝업창 띄우기
+                    string log = $"개인 빚 {string.Format("{0:#,0}",(int)currentPersonalDebtGoldClickedUnit)}G을 상환하였습니다.";
+                    ConfirmPopuper.Instance.PopupCheckPanel(log);
+                    DialogueManager.Instance.PutDialogue("<속마음> 이정도 갚았나..\n 모든 빚을 다 갚으면 모든 목적을 이룬 걸 거야..");
+                    // 게임 클리어 됐는지 체크
+                    if(responseData.isGameCleared == "Y")
+                    { 
+                        // 뉴스 패널 끄기
+                        toggleObjsManager.TurnOffNewsObjs();
+                        
+                        // 게임 클리어 화면 데이터 세팅하기
+                        gameSessionManager.PopupGameEndObjs(responseData.worldRecord, 
+                        "모든 빚을 다 상환하여 게임을 클리어하였습니다!!!");
+                        DialogueManager.Instance.PutDialogue("<주인> 다 갚았다!!");
+                    }   
+                }
+            }
+        );
     }
 
     // 가게 빚 대출/상환 버튼 눌렸을 때
@@ -117,41 +128,54 @@ public class ItemActionManager : MonoBehaviour
             
         }
         // 요청 데이터 보내고 반환 데이터 받기
-        // LoanUpdateResponse responseData =TransmissionManager.Instance.RequestToServer<LoanUpdateRequest,LoanUpdateResponse>(RequestType.LOAN_UPDATE,requestData);
-        
-        // 테스트용 데이터 <<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/18loanUpdateClearPawnShop.json", typeof(TextAsset));
-        LoanUpdateResponse responseData =JsonUtility.FromJson<LoanUpdateResponse>(jsonFile.text);
-
-        /* 결과 데이터 UI 업데이트하기 */
-        // 돈 업데이트
-        gameSessionManager.SetLeftMoney(responseData.leftMoney);
-        // 가게빚 UI 업데이트
-        UpdateDebtValue(0, responseData.leftDebtAmount);
-        // 팝업창 띄우기
-        string log;
-        if(requestData.amount > 0) // 대출이었다면
-        {
-            log = $"가게 빚 {string.Format("{0:#,0}",(int)currentPawnshopDebtGoldClickedUnit)}G을 대출하였습니다.";        
-            DialogueManager.Instance.PutDialogue("<속마음> 어쩔 수 없다.. 대출을 받자");
-        }
-        else
-        {
-            log = $"가게 빚 {string.Format("{0:#,0}",(int)currentPawnshopDebtGoldClickedUnit)}G을 상환하였습니다.";                    
-            DialogueManager.Instance.PutDialogue("<속마음> 이대로 조금씩 조금씩..");
-        }
-        ConfirmPopuper.Instance.PopupCheckPanel(log);
-        // 게임 클리어 됐는지 체크
-        if(responseData.isGameCleared == "Y")
-        {
-            // 뉴스 패널 끄기
-            toggleObjsManager.TurnOffNewsObjs();
-            // 게임 클리어 화면 띄우기
-            gameSessionManager.PopupGameEndObjs(responseData.worldRecord, 
-            "모든 빚을 다 상환하여 게임을 클리어하였습니다!!!");
-            DialogueManager.Instance.PutDialogue("<주인> 다 갚았다!!");
-        }
-
+        TransmissionManager.Instance.RequestToServer<LoanUpdateRequest,LoanUpdateResponse>(
+            RequestType.LOAN_UPDATE,
+            requestData,
+            (responseCode, responseData) =>
+            {
+                // 테스트용 데이터 <<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/18loanUpdateClearPawnShop.json");
+                responseData =JsonUtility.FromJson<LoanUpdateResponse>(jsonFile.text);
+                // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 가게 빚 처리 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    /* 결과 데이터 UI 업데이트하기 */
+                    // 돈 업데이트
+                    gameSessionManager.SetLeftMoney(responseData.leftMoney);
+                    // 가게빚 UI 업데이트
+                    UpdateDebtValue(0, responseData.leftDebtAmount);
+                    // 팝업창 띄우기
+                    string log;
+                    if(requestData.amount > 0) // 대출이었다면
+                    {
+                        log = $"가게 빚 {string.Format("{0:#,0}",(int)currentPawnshopDebtGoldClickedUnit)}G을 대출하였습니다.";        
+                        DialogueManager.Instance.PutDialogue("<속마음> 어쩔 수 없다.. 대출을 받자");
+                    }
+                    else
+                    {
+                        log = $"가게 빚 {string.Format("{0:#,0}",(int)currentPawnshopDebtGoldClickedUnit)}G을 상환하였습니다.";                    
+                        DialogueManager.Instance.PutDialogue("<속마음> 이대로 조금씩 조금씩..");
+                    }
+                    ConfirmPopuper.Instance.PopupCheckPanel(log);
+                    // 게임 클리어 됐는지 체크
+                    if(responseData.isGameCleared == "Y")
+                    {
+                        // 뉴스 패널 끄기
+                        toggleObjsManager.TurnOffNewsObjs();
+                        // 게임 클리어 화면 띄우기
+                        gameSessionManager.PopupGameEndObjs(responseData.worldRecord, 
+                        "모든 빚을 다 상환하여 게임을 클리어하였습니다!!!");
+                        DialogueManager.Instance.PutDialogue("<주인> 다 갚았다!!");
+                    }
+                }
+            }
+        );
     }
 
     public void OnPersonalDebtGoldToggleClicked()
@@ -251,18 +275,32 @@ public class ItemActionManager : MonoBehaviour
         Debug.Log(requestData.actionType);
         requestData.itemKey = currentClickedItem.itemKey;
         Debug.Log(requestData.itemKey);
-        // ItemActionResponse responseData = TransmissionManager.Instance.RequestToServer<ItemActionRequest,ItemActionResponse>(RequestType.ITEM_ACTION,requestData);
-        //요청하고 결과값 받기 -> 서버 있어야 받을 수 있음
-        // 테스트 데이터 <<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/14itemAction.json", typeof(TextAsset));
-        ItemActionResponse responseData =JsonUtility.FromJson<ItemActionResponse>(jsonFile.text);
-
-        // 디스플레이 아이템 매니저도 업데이트
-        displayManager.SetItemState(currentClickedItem.displayPositionKey, responseData.itemState);
-        
-        // 여기 아이템액션 매니저의 창도 업데이트
-        OnItemActionTogClicked(itemActionTog.transform.GetChild(0).GetComponent<Toggle>().isOn);
-        DialogueManager.Instance.PutDialogue("<속마음> 얼마나 걸릴려나..");
+        TransmissionManager.Instance.RequestToServer<ItemActionRequest,ItemActionResponse>(
+            RequestType.ITEM_ACTION,
+            requestData,
+            (responseCode, responseData) =>
+            {
+                // 테스트 데이터 <<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/14itemAction.json");
+                responseData =JsonUtility.FromJson<ItemActionResponse>(jsonFile.text);
+                // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 아이템 복원/경매 처리 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    // 디스플레이 아이템 매니저도 업데이트
+                    displayManager.SetItemState(currentClickedItem.displayPositionKey, responseData.itemState);
+                    
+                    // 여기 아이템액션 매니저의 창도 업데이트
+                    OnItemActionTogClicked(itemActionTog.transform.GetChild(0).GetComponent<Toggle>().isOn);
+                    DialogueManager.Instance.PutDialogue("<속마음> 얼마나 걸릴려나..");                    
+                }
+            }
+        );
     }
 
     public void SetItemActionPanel()

@@ -1,10 +1,6 @@
 using UnityEngine;
-using UnityEditor;
-using System.Collections.Generic;
-using UnityEditor.Build.Content;
 using TMPro;
 using AYellowpaper.SerializedCollections;
-using Unity.VisualScripting;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -47,6 +43,10 @@ public class LoginManager : MonoBehaviour
         {
             instance = this;
             DontDestroyOnLoad(this.gameObject);
+            #if UNITY_STANDALONE
+                Screen.SetResolution(720,1280,false);
+                Screen.fullScreen = false;
+            #endif
         }
         else
         {
@@ -69,79 +69,95 @@ public class LoginManager : MonoBehaviour
     }
 
     public void RequestToLogOut(){
-        int responseCode = TransmissionManager.Instance.RequestToServer<int, int>(RequestType.LOGOUT,0);
+        TransmissionManager.Instance.RequestToServer<int, int>(
+            RequestType.LOGOUT,
+            0,
+            (responseCode, responseData) =>
+            {
+                // 확인용 코드 <<<<<<<<<<<<<<
+                responseCode = 200;
 
-        // 확인용 코드 <<<<<<<<<<<<<<
-        responseCode = 200;
+                if((ResponseCode)responseCode == ResponseCode.OK)
+                {
+                    // 로그인 초기화
+                    playerIdCache =""; // 캐시 초기화
+                    loginIdTMP.text = "";
+                    loginPwTMP.text = "";
+                    RegisterIdTMP.text = "";
+                    RegisterPwTMP.text = "";
+                    // 트랜스미션에 세션토큰 전달
+                    TransmissionManager.Instance.SetSessionToken(""); // 초기화
 
-        if((ResponseCode)responseCode == ResponseCode.OK)
-        {
-            // 로그인 초기화
-            playerIdCache =""; // 캐시 초기화
-            loginIdTMP.text = "";
-            loginPwTMP.text = "";
-            RegisterIdTMP.text = "";
-            RegisterPwTMP.text = "";
-            // 트랜스미션에 세션토큰 전달
-            TransmissionManager.Instance.SetSessionToken(""); // 초기화
+                    // 로그인패널 비활성화, 인로그인패널 활성화
+                    loginState =LoginState.LOGIN;
+                    inLoginObjs.SetActive(false);
+                    LoginResisterObjs.SetActive(true);
 
-            // 로그인패널 비활성화, 인로그인패널 활성화
-            loginState =LoginState.LOGIN;
-            inLoginObjs.SetActive(false);
-            LoginResisterObjs.SetActive(true);
-
-            ConfirmPopuper.Instance?.PopupCheckPanel("로그아웃 되었습니다.");    
-        }
-        else
-        {
-            // 로그인 실패 처리
-            Debug.LogError("로그아웃 실패");
-            ConfirmPopuper.Instance?.PopupCheckPanel("내부 동작 오류. 로그아웃 실패");  
-        }
+                    ConfirmPopuper.Instance?.PopupCheckPanel("로그아웃 되었습니다.");    
+                }
+                else
+                {
+                    string errorMessage = "통신 오류: 로그아웃 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+            }
+        );
     }
 
 
     public void RequestToLogin()
     {
+        // 요청 데이터 전달
         PlayerRegisterLoginRequest requestData = new PlayerRegisterLoginRequest();
         requestData.playerId = loginIdTMP.text;
         requestData.password = loginPwTMP.text;
-        LoginResponse responseData =TransmissionManager.Instance.RequestToServer<PlayerRegisterLoginRequest,LoginResponse>(RequestType.LOGIN,requestData);
+        // 서버 요청 코루틴 실행
+        TransmissionManager.Instance.RequestToServer<PlayerRegisterLoginRequest,LoginResponse>(
+            RequestType.LOGIN,
+            requestData,
+            (responseCode, responseData) => // 서버 요청 코루틴 끝나면 해당 람다 콜백 함수 실행 됨
+            {
+                // 테스트 데이터 <<<<<<<<<<<<<
+                responseData= new LoginResponse(); //
+                responseData.sessionToken = "ang Kimoti"; // <<<<<<<< 확인용 코드
+                responseData.hasGameSession = "Y"; // 기존 게임 불러오기, "N"이면 새 게임 생성에 쓸 변수임
 
-        // Mock 데이터
-        responseData= new LoginResponse(); //
-        responseData.sessionToken = "ang Kimoti"; // <<<<<<<< 확인용 코드
-        responseData.hasGameSession = "Y"; // 기존 게임 불러오기, "N"이면 새 게임 생성에 쓸 변수임
+                if(responseData != default)
+                {
+                    // 로그인 초기화
+                    playerIdCache =requestData.playerId; // 아이디는 캐시에 저장
+                    loginIdTMP.text = null;
+                    loginPwTMP.text = null;
+                    RegisterIdTMP.text = null;
+                    RegisterPwTMP.text = null;
+                    inLoginObjs.transform.GetChild(4).GetComponent<TMP_Text>().text = playerIdCache;
+                    // 트랜스미션에 세션토큰 전달
+                    TransmissionManager.Instance.SetSessionToken(responseData.sessionToken);
+                    // 게임 세션 있는지 전달
+                    SingletonManager.Instance.HasGameSession = responseData.hasGameSession;
 
-        if(responseData != default)
-        {
-            // 로그인 초기화
-            playerIdCache =requestData.playerId; // 아이디는 캐시에 저장
-            loginIdTMP.text = null;
-            loginPwTMP.text = null;
-            RegisterIdTMP.text = null;
-            RegisterPwTMP.text = null;
-            inLoginObjs.transform.GetChild(4).GetComponent<TMP_Text>().text = playerIdCache;
-            // 트랜스미션에 세션토큰 전달
-            TransmissionManager.Instance.SetSessionToken(responseData.sessionToken);
-            // 게임 세션 있는지 전달
-            SingletonManager.Instance.HasGameSession = responseData.hasGameSession;
+                    // 로그인패널 비활성화, 인로그인패널 활성화
+                    loginState =LoginState.IN_LOGIN;
+                    LoginResisterObjs.SetActive(false);
+                    inLoginObjs.SetActive(true);
 
-            // 로그인패널 비활성화, 인로그인패널 활성화
-            loginState =LoginState.IN_LOGIN;
-            LoginResisterObjs.SetActive(false);
-            inLoginObjs.SetActive(true);
-
-            string log = "로그인 성공";
-            ConfirmPopuper.Instance?.PopupCheckPanel(log);            
-        }
-        else
-        {
-            // 로그인 실패 처리
-            Debug.Log("로그인 실패");
-            string log = "로그인 실패.\nID와 PW를 잘 확인해보세요";
-            ConfirmPopuper.Instance?.PopupCheckPanel(log);  
-        }
+                    string log = "로그인 성공";
+                    ConfirmPopuper.Instance?.PopupCheckPanel(log);            
+                }
+                else if((ResponseCode)responseCode == ResponseCode.OK)
+                {
+                    // 로그인 실패 처리
+                    Debug.Log("로그인 실패");
+                    string log = "로그인 실패.\nID와 PW를 잘 확인해보세요";
+                    ConfirmPopuper.Instance?.PopupCheckPanel(log);  
+                }
+                else
+                {
+                    string errorMessage = "통신 오류: 로그인 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+            }
+        );
     }
 
     void OnEnable()
@@ -217,58 +233,78 @@ public class LoginManager : MonoBehaviour
         requestData.playerId = RegisterIdTMP.text;
         requestData.password = RegisterPwTMP.text;
         // TODO: 해당 default가 성공인지 실패인지 알려면
-        int responseCode =TransmissionManager.Instance.RequestToServer<PlayerRegisterLoginRequest,int>(RequestType.REGISTER,requestData);
-        responseCode =200; // <<<<<<<<<<<<<<< 확인용 코드
-        if(responseCode == 200)
-        {
-            loginState =LoginState.IN_LOGIN;
-            string log = "회원가입 성공";
-            ConfirmPopuper.Instance?.PopupCheckPanel(log);            
-        }
-        else if(responseCode == 400)
-        {
-            string log = "회원가입 실패.\nID가 중복됩니다.";
-            ConfirmPopuper.Instance?.PopupCheckPanel(log);  
-            // TODO: 로그인 실패 처리
-        }
-        else{
-            Debug.LogError("회원가입 통신 실패");
-            string log = "회원가입 실패.\n통신이 되지 않습니다.";
-            ConfirmPopuper.Instance?.PopupCheckPanel(log);  
-            // TODO: 로그인 실패 처리
-        }
+        TransmissionManager.Instance.RequestToServer<PlayerRegisterLoginRequest,int>(
+            RequestType.REGISTER,
+            requestData,
+            (responseCode, responseData) =>
+            {
+                responseCode =200; // <<<<<<<<<<<<<<< 확인용 코드
+                if(responseCode == 200)
+                {
+                    loginState =LoginState.IN_LOGIN;
+                    string log = "회원가입 성공";
+                    ConfirmPopuper.Instance?.PopupCheckPanel(log);            
+                }
+                else if(responseCode == 400)
+                {
+                    string log = "회원가입 실패.\nID가 중복됩니다.";
+                    ConfirmPopuper.Instance?.PopupCheckPanel(log);  
+                }
+                else
+                {
+                    string errorMessage = "통신 오류: 회원가입 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+            }
+        );
     }
     
 
 
     private void LoadWorldRecord()
     {
-        // WorldRecordResponse worldRecordsData = TransmissionManager.Instance.RequestToServer<int, WorldRecordResponse>(RequestType.WORLD_RECORDS, 0);
+        TransmissionManager.Instance.RequestToServer<int, WorldRecordResponse>(
+            RequestType.WORLD_RECORDS,
+            0,
+            (responseCode, responseData) =>
+            {
+                // 테스트 데이터 <<<<<<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/20worldRecords.json");
+                responseData =JsonUtility.FromJson<WorldRecordResponse>(jsonFile.text);
 
-        // 테스트 데이터 <<<<<<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/20worldRecords.json", typeof(TextAsset));
-        WorldRecordResponse worldRecordsData =JsonUtility.FromJson<WorldRecordResponse>(jsonFile.text);
-
-        GameObject conetentObj =  worldRecordPanel.transform.GetChild(2).GetChild(0).GetChild(0).gameObject;
-
-        for(int i = 0; i < worldRecordsData.worldRecords.Count; i++)
-        {
-            GameObject wrldRecordRow=Instantiate(wrldRecordRowPrefab, conetentObj.transform);
-            // Nickname
-            wrldRecordRow.transform.GetChild(1).GetComponent<TMP_Text>().text
-                = $"#{worldRecordsData.worldRecords[i].playerId}";
-            wrldRecordRow.transform.GetChild(6).GetComponent<TMP_Text>().text
-                = worldRecordsData.worldRecords[i].nickname;
-            // Shopname
-            wrldRecordRow.transform.GetChild(7).GetComponent<TMP_Text>().text
-                = worldRecordsData.worldRecords[i].pawnshopName;
-            // DayCount
-            wrldRecordRow.transform.GetChild(8).GetComponent<TMP_Text>().text
-                = $"{string.Format("{0:#,0}",worldRecordsData.worldRecords[i].gameEndDayCount)} 일";
-            // Date
-            wrldRecordRow.transform.GetChild(9).GetComponent<TMP_Text>().text
-                = worldRecordsData.worldRecords[i].gameEndDate;
-        }
+                // 오류 확인
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 세계 기록 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                // 정상 동작
+                else
+                {
+                    GameObject conetentObj =  worldRecordPanel.transform.GetChild(2).GetChild(0).GetChild(0).gameObject;
+                    
+                    for(int i = 0; i < responseData.worldRecords.Count; i++)
+                    {
+                        GameObject wrldRecordRow=Instantiate(wrldRecordRowPrefab, conetentObj.transform);
+                        // Nickname
+                        wrldRecordRow.transform.GetChild(1).GetComponent<TMP_Text>().text
+                            = $"#{responseData.worldRecords[i].playerId}";
+                        wrldRecordRow.transform.GetChild(6).GetComponent<TMP_Text>().text
+                            = responseData.worldRecords[i].nickname;
+                        // Shopname
+                        wrldRecordRow.transform.GetChild(7).GetComponent<TMP_Text>().text
+                            = responseData.worldRecords[i].pawnshopName;
+                        // DayCount
+                        wrldRecordRow.transform.GetChild(8).GetComponent<TMP_Text>().text
+                            = $"{string.Format("{0:#,0}",responseData.worldRecords[i].gameEndDayCount)} 일";
+                        // Date
+                        wrldRecordRow.transform.GetChild(9).GetComponent<TMP_Text>().text
+                            = responseData.worldRecords[i].gameEndDate;
+                    }                    
+                }
+            }
+        );
     }
 
     public void OpenWorldRecord()

@@ -1,6 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine.UI;
 using TMPro;
 using System.Text.RegularExpressions;
@@ -21,13 +20,28 @@ public class ItemDisplayManager : MonoBehaviour
     void Start()
     {
         // 실제 데이터 요청
-        // ItemDisplaysWrapData responseData = TransmissionManager.Instance.RequestToServer<int, ItemDisplaysWrapData>(RequestType.DISPLAY_CUR_ALL, 0);
+        TransmissionManager.Instance.RequestToServer<int, ItemDisplaysWrapData>(
+            RequestType.DISPLAY_CUR_ALL,
+            0,
+            (responseCode, responseData) =>
+            {
+                // 테스트 데이터 <<<<<<<<<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/6displayItemAll.json");
+                responseData =JsonUtility.FromJson<ItemDisplaysWrapData>(jsonFile.text);
+                // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 전시장 아이템 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    InitDisplayedItem(responseData.displays);        
+                }
+            }
+        );
 
-        // 실제로는 데이웨이브 매니저 - 통신 매니저에서 수행 할 일이지만 미리 확인을 위해 start에서 실행 중
-        // 테스트 데이터 <<<<<<<<<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/6displayItemAll.json", typeof(TextAsset));
-        ItemDisplaysWrapData responseData =JsonUtility.FromJson<ItemDisplaysWrapData>(jsonFile.text);
-        InitDisplayedItem(responseData.displays);
     }
 
     public void InitDisplayedItem(List<DisplayedItemData> displays)

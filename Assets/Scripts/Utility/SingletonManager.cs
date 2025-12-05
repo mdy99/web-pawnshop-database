@@ -1,9 +1,5 @@
-using System.Collections.Generic;
-using System.Data.Common;
 using UnityEngine;
-using UnityEditor;
 using UnityEngine.SceneManagement;
-using TMPro;
 
 namespace AYellowpaper.SerializedCollections
 {
@@ -55,12 +51,27 @@ public class SingletonManager : MonoBehaviour
             DontDestroyOnLoad(this.gameObject);
 
             // 나중에 이거 데이웨이브매니저에서 실행해야하는 거 알지?
-            // InitialCatalogResponse responseData = TransmissionManager.Instance.RequestToServer<int,InitialCatalogResponse>(RequestType.INIT_CATALOGS, 0);
-
-            // 테스트용 코드 <<<<<<<<<<<<<<<<<<<<<<<<<
-            TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/5initialCatalog.json", typeof(TextAsset));
-            InitialCatalogResponse responseData =JsonUtility.FromJson<InitialCatalogResponse>(jsonFile.text);
-            InitCatalogMaps(responseData);
+            TransmissionManager.Instance.RequestToServer<int,InitialCatalogResponse>(
+                RequestType.INIT_CATALOGS,
+                0,
+                (responseCode, responseData) =>
+                {
+                    // 테스트용 코드 <<<<<<<<<<<<<<<<<<<<<<<<<
+                    responseCode = 200;
+                    TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/5initialCatalog.json");
+                    responseData =JsonUtility.FromJson<InitialCatalogResponse>(jsonFile.text);
+                    // 통신 오류 체크
+                    if((ResponseCode)responseCode != ResponseCode.OK)
+                    {
+                        string errorMessage = "통신 오류: 기본 카탈로그 데이터 요청 실패.";
+                        TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                    }
+                    else
+                    {
+                        InitCatalogMaps(responseData);            
+                    }
+                }
+            );
         }
         else
         {

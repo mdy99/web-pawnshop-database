@@ -1,7 +1,6 @@
 using AYellowpaper.SerializedCollections;
 using TMPro;
 using UnityEngine;
-using UnityEditor;
 
 public class GameSessionManager : MonoBehaviour
 {
@@ -122,30 +121,61 @@ public class GameSessionManager : MonoBehaviour
         requestData.nickname = nickNameInput.text;
         requestData.shopName = shopNameInput.text;
         // 데이터 요청
-        // GameSessionData responseData = TransmissionManager.Instance.RequestToServer<NewGameSessionRequest,GameSessionData>(RequestType.NEW_SESSION, requestData);
+        TransmissionManager.Instance.RequestToServer<NewGameSessionRequest,GameSessionData>(
+            RequestType.NEW_SESSION,
+            requestData,
+            (responseCode, responseData) =>
+            {
+                // 테스트용 데이터 사용 <<<<<<<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/3newGameSession.json");
+                responseData =JsonUtility.FromJson<GameSessionData>(jsonFile.text);
+                responseData.nickname = nickNameInput.text;
+                responseData.shopName = shopNameInput.text;
+
+                 // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 새 게임세션 데이터 생성 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    // 받아온 데이터로 업데이트 하기
+                    SetUIData(responseData);
+                    // 이제 닉 받는 패널 끄기
+                    nickAndShopPanel.SetActive(false);                     
+                }
+            }
+        );
         
-        // 테스트용 데이터 사용 <<<<<<<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/3newGameSession.json", typeof(TextAsset));
-        GameSessionData responseData =JsonUtility.FromJson<GameSessionData>(jsonFile.text);
-        responseData.nickname = nickNameInput.text;
-        responseData.shopName = shopNameInput.text;
         
-        // 받아온 데이터로 업데이트 하기
-        SetUIData(responseData);
-        // 이제 닉 받는 패널 끄기
-        nickAndShopPanel.SetActive(false); 
     }
     private void RequestLatestGameSession()
     {
         // 데이터 요청
-        // GameSessionData responseData = TransmissionManager.Instance.RequestToServer<int,GameSessionData>(RequestType.LATEST_SESSION, 0); // 보낼 데이터가 없음
-
-        // 테스트용 데이터 사용 <<<<<<<<<<<<<<<<<<<<<<
-        TextAsset jsonFile = (TextAsset)AssetDatabase.LoadAssetAtPath("Assets/Mocks/4latestGameSession.json", typeof(TextAsset));
-        GameSessionData responseData =JsonUtility.FromJson<GameSessionData>(jsonFile.text);
-
-        // TODO: 받은 데이터로 보이는 것들 세팅       
-        SetUIData(responseData);
+        TransmissionManager.Instance.RequestToServer<int,GameSessionData>(
+            RequestType.LATEST_SESSION,
+            0, // 보낼 데이터가 없음
+            (responseCode, responseData) =>
+            {
+                // 테스트용 데이터 사용 <<<<<<<<<<<<<<<<<<<<<<
+                responseCode = 200;
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/4latestGameSession.json");
+                responseData =JsonUtility.FromJson<GameSessionData>(jsonFile.text);
+                 // 통신 오류 체크
+                if((ResponseCode)responseCode != ResponseCode.OK)
+                {
+                    string errorMessage = "통신 오류: 지난 게임세션 불러오기 요청 실패.";
+                    TransmissionManager.Instance.OnHandleErrorResponseCode(responseCode, errorMessage);
+                }
+                else
+                {
+                    // 받은 데이터로 보이는 것들 세팅       
+                    SetUIData(responseData);                    
+                }                
+            }
+        );
     }
 
     private void SetUIData(GameSessionData responseData)
