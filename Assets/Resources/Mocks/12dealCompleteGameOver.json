@@ -36,5 +36,6 @@
         "pawnshopName": "Elite Pawns",
          "gameEndDatyCount": 57,
          "gameEndDate": "2024-01-15T10:00:00Z"
-    }
+    },
+    "notFoundCategoryList": ["시계","골동품","예술품","화폐"]
 }

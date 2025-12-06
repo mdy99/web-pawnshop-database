@@ -100,7 +100,7 @@
 //             });
 //         //요청하고 결과값 받기 -> 서버 있어야 받을 수 있음
 
-//         TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/18loanUpdate.json");
+//         TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/18loanUpdate");
 //         LoanUpdateResponse responseData =JsonUtility.FromJson<LoanUpdateResponse>(jsonFile.text);
 
 //         // 디스플레이 아이템 매니저도 업데이트

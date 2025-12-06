@@ -136,7 +136,7 @@ public class DealManager : MonoBehaviour
             {
                 // 테스트용 코드 <<<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/15itemResult.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/15itemResult");
                 responseData =JsonUtility.FromJson<ItemActionResultResponse>(jsonFile.text);
                 
                 // 통신 오류 체크
@@ -223,9 +223,12 @@ public class DealManager : MonoBehaviour
             // 만약 모든 경매/복원 완료 아이템 다 처리하고 게임 오버 됐으면,
             if(currentItemActionResponseData.isGameOvered == "Y")
             {
+                // 못 찾은 아이템 리스트 창 띄우기
+                gameSessionManager.PopupNotFoundItemListObjs(currentItemActionResponseData.notFoundCategoryList);
                 // 게임오버 창 띄우기
                 gameSessionManager.PopupGameEndObjs(currentItemActionResponseData.worldRecord,
                                     "복원 비용을 못 낸다고? 넌 안 되겠다ㅋㅋ");
+                
                 DialogueManager.Instance.PutDialogue("<속마음> 아뿔싸 돈을 남겨두는\n습관을 가질 걸..");
             }
         }
@@ -258,7 +261,7 @@ public class DealManager : MonoBehaviour
             {
                 // 테스트용 코드 <<<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/7newsCurrent.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/7newsCurrent");
                 responseData =JsonUtility.FromJson<NewsWrapData>(jsonFile.text);
                 
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -286,7 +289,7 @@ public class DealManager : MonoBehaviour
             {                
                 // 테스트용 코드 <<<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/10generateDailyDeals.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/10generateDailyDeals");
                 responseData =JsonUtility.FromJson<DailyDealsWrapData>(jsonFile.text);
 
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -453,7 +456,7 @@ public class DealManager : MonoBehaviour
             {
                 // 테스트용 데이터 <<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_grade.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_grade");
                  responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
                  // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -511,7 +514,7 @@ public class DealManager : MonoBehaviour
             {
                 // 테스트용 데이터 <<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_flaw.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_flaw");
                 responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
 
                 // 통신 오류 체크
@@ -560,7 +563,7 @@ public class DealManager : MonoBehaviour
             {
                 // 테스트용 데이터 <<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_auth.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_auth");
                 responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -615,7 +618,7 @@ public class DealManager : MonoBehaviour
             {
                 // 테스트용 데이터 <<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/9itemHind.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/9itemHind");
                 responseData =JsonUtility.FromJson<ItemHintResponse>(jsonFile.text);
 
                 // 통신 오류 체크
@@ -669,7 +672,7 @@ public class DealManager : MonoBehaviour
             {
                 // 테스트용 데이터 <<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/8revealCustomer.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/8revealCustomer");
                 responseData =JsonUtility.FromJson<RevealCustomerResponse>(jsonFile.text);
 
                 // 통신 오류 체크
@@ -881,7 +884,7 @@ public class DealManager : MonoBehaviour
             {
                 // 테스트용 데이터 사용 <<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/16itemSellStart.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/16itemSellStart");
                 responseData =JsonUtility.FromJson<SellStartResponse>(jsonFile.text);
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -934,7 +937,7 @@ public class DealManager : MonoBehaviour
             {
                 // 테스트용 데이터 사용 <<<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/17sellComplete.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/17sellComplete");
                 responseData =JsonUtility.FromJson<SellCompleteResponse>(jsonFile.text);
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -1064,7 +1067,7 @@ public class DealManager : MonoBehaviour
             {
                 // 테스트용 데이터 사용
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/12dealComplete.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/12dealComplete");
                  responseData =JsonUtility.FromJson<DealCompleteResponse>(jsonFile.text);
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -1141,6 +1144,8 @@ public class DealManager : MonoBehaviour
         // 게임오버 됐는지 체크
         if(dealDecideActionResponseData.isGameOvered == "Y")
         { // 오버했다면, 오버 화면 띄우기
+            // 못 찾은 아이템 리스트 창 띄우기
+            gameSessionManager.PopupNotFoundItemListObjs(currentItemActionResponseData.notFoundCategoryList);
             // 게임 오버 화면 데이터 세팅하기
             gameSessionManager.PopupGameEndObjs(dealDecideActionResponseData.worldRecord, 
             "상환할 이자를 내지 못해 사채업자들에게 끌려갔습니다...");
@@ -1172,7 +1177,7 @@ public class DealManager : MonoBehaviour
             {
                 // 테스트용 데이터 사용
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/12dealCancelLeftDeal.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/12dealCancelLeftDeal");
                 responseData =JsonUtility.FromJson<DealCompleteResponse>(jsonFile.text);
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)

@@ -271,6 +271,7 @@ public class DealCompleteResponse
     public DayNextData dayNext; // 다음 날 넘어가는 정보들
     public DayFinalizeData dayFinalize; // 정산 정보
     public WorldRecordData worldRecord; // 게임 종료 정보
+    public List<string> notFoundCategoryList;
 }
 
 [System.Serializable]
@@ -281,6 +282,7 @@ public class DenyDealResponse
     public DayNextData dayNext; // 다음 날 넘어가는 정보들
     public DayFinalizeData dayFinalize; // 정산 정보
     public WorldRecordData worldRecord; // 게임 종료 정보
+    public List<string> notFoundCategoryList;
 }
 
 // ======================================================
@@ -318,6 +320,7 @@ public class ItemActionResultResponse
     public int leftMoney;
     public string isGameOvered; // "Y" | "N" . 게임 오버 되었으면, "Y"
     public WorldRecordData worldRecord; // 게임 종료 정보
+    public List<string> notFoundCategoryList;
 }
 
 // ======================================================
@@ -381,6 +384,7 @@ public class LoanUpdateResponse
     public int leftMoney;
     public string isGameCleared; // 게임 클리어 여부 "Y" , "N"
     public WorldRecordData worldRecord; // 게임 종료 기록
+    public List<string> notFoundCategoryList;
 }
 
 // ======================================================
@@ -425,6 +429,8 @@ public class WorldRecordResponse
 {
     public List<WorldRecordData> worldRecords;
 }
+
+
 
 // ======================================================
 // 에러 응답

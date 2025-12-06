@@ -74,7 +74,7 @@ public class ItemActionManager : MonoBehaviour
             {
                 // 테스트용 데이터 <<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/18loanUpdatePersonal.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/18loanUpdatePersonal");
                 responseData =JsonUtility.FromJson<LoanUpdateResponse>(jsonFile.text);
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -98,7 +98,9 @@ public class ItemActionManager : MonoBehaviour
                     { 
                         // 뉴스 패널 끄기
                         toggleObjsManager.TurnOffNewsObjs();
-                        
+
+                        // 못 찾은 아이템 리스트 창 띄우기
+                        gameSessionManager.PopupNotFoundItemListObjs(responseData.notFoundCategoryList);
                         // 게임 클리어 화면 데이터 세팅하기
                         gameSessionManager.PopupGameEndObjs(responseData.worldRecord, 
                         "모든 빚을 다 상환하여 게임을 클리어하였습니다!!!");
@@ -135,7 +137,7 @@ public class ItemActionManager : MonoBehaviour
             {
                 // 테스트용 데이터 <<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/18loanUpdateClearPawnShop.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/18loanUpdateClearPawnShop");
                 responseData =JsonUtility.FromJson<LoanUpdateResponse>(jsonFile.text);
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -168,6 +170,8 @@ public class ItemActionManager : MonoBehaviour
                     {
                         // 뉴스 패널 끄기
                         toggleObjsManager.TurnOffNewsObjs();
+                        // 못 찾은 아이템 리스트 창 띄우기
+                        gameSessionManager.PopupNotFoundItemListObjs(responseData.notFoundCategoryList);                       
                         // 게임 클리어 화면 띄우기
                         gameSessionManager.PopupGameEndObjs(responseData.worldRecord, 
                         "모든 빚을 다 상환하여 게임을 클리어하였습니다!!!");
@@ -282,7 +286,7 @@ public class ItemActionManager : MonoBehaviour
             {
                 // 테스트 데이터 <<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/14itemAction.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/14itemAction");
                 responseData =JsonUtility.FromJson<ItemActionResponse>(jsonFile.text);
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -334,7 +338,6 @@ public class ItemActionManager : MonoBehaviour
             itemListTog.transform.GetChild(0+i).GetChild(1).GetChild(0)
                 .GetComponent<Image>().sprite = Resources.Load<Sprite>($"IMG_ITEM_CATALOG/{iData.imgId}");
             
-
             // 디스플레이 아이템 정보 패널도 채우기
             // 값 채우기
             string foundAuth="";

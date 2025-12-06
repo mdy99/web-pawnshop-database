@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using AYellowpaper.SerializedCollections;
+using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
 
@@ -26,6 +28,26 @@ public class GameSessionManager : MonoBehaviour
     [SerializeField] private ItemActionManager itemActionManager;
     [SerializeField] private GameObject GameEndObjs;
 
+    [SerializeField] private GameObject notFoundItemListObjs;
+    [SerializeField] private GameObject notFoundRowPrefab;
+
+    public void PopupNotFoundItemListObjs(List<string> notFoundCategoryList)
+    {
+        GameObject contentObj = notFoundItemListObjs.transform.GetChild(4).GetChild(0).GetChild(0).gameObject;
+        // FOR문으로 다 인스턴시에이트 하기
+        for(int i = 0; i < notFoundCategoryList.Count; ++i)
+        {
+            GameObject notFoundItemInstance=Instantiate(notFoundRowPrefab,contentObj.transform);
+            notFoundItemInstance.transform.GetChild(0).GetComponent<TMP_Text>().text = notFoundCategoryList[i];
+        }
+        // 못 찾은 아이템 목록 화면 띄우기
+        notFoundItemListObjs.SetActive(true);
+    }
+
+    public void OnNotFoundButtonClicked()
+    {
+        notFoundItemListObjs.SetActive(false);
+    }
 
     public void PopupGameEndObjs(WorldRecordData worldRecordData, string gameOverDescription)
     {
@@ -128,7 +150,7 @@ public class GameSessionManager : MonoBehaviour
             {
                 // 테스트용 데이터 사용 <<<<<<<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/3newGameSession.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/3newGameSession");
                 responseData =JsonUtility.FromJson<GameSessionData>(jsonFile.text);
                 responseData.nickname = nickNameInput.text;
                 responseData.shopName = shopNameInput.text;
@@ -161,7 +183,7 @@ public class GameSessionManager : MonoBehaviour
             {
                 // 테스트용 데이터 사용 <<<<<<<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/4latestGameSession.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/4latestGameSession");
                 responseData =JsonUtility.FromJson<GameSessionData>(jsonFile.text);
                  // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)

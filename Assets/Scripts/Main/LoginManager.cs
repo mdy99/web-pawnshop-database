@@ -270,7 +270,7 @@ public class LoginManager : MonoBehaviour
             {
                 // 테스트 데이터 <<<<<<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/20worldRecords.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/20worldRecords");
                 responseData =JsonUtility.FromJson<WorldRecordResponse>(jsonFile.text);
 
                 // 오류 확인

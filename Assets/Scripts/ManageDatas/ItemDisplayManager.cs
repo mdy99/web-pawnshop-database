@@ -27,7 +27,7 @@ public class ItemDisplayManager : MonoBehaviour
             {
                 // 테스트 데이터 <<<<<<<<<<<<<<<<<<<<<<<<
                 responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/6displayItemAll.json");
+                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/6displayItemAll");
                 responseData =JsonUtility.FromJson<ItemDisplaysWrapData>(jsonFile.text);
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
