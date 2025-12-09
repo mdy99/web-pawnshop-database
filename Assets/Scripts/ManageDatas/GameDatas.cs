@@ -263,7 +263,6 @@ public class DealCompleteRequest
 [System.Serializable]
 public class DealCompleteResponse
 {
-    public string dealSuccess; // "Y", "N"
     public int leftMoney;
     public DisplayedItemData displayedItem;
     public string isGameOvered; // "Y" | "N" // 아직 게임 진행 중이면 N

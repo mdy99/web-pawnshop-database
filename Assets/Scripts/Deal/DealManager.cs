@@ -1080,7 +1080,7 @@ public class DealManager : MonoBehaviour
                     dealDecideActionResponseData = responseData; // 전역변수에 저장해서 다같이 봐
 
                     // 거래 성공 시
-                    if(responseData.dealSuccess =="Y")
+                    if(responseCode ==200)
                     {
                         // 거래 성공에 대한 클라 업데이트하기
                         // 전시장 아이템 추가
