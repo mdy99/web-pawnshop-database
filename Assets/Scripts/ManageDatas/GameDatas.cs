@@ -163,7 +163,7 @@ public class NewsWrapData
 
 // ======================================================
 // 고객 정보 공개
-// PATCH /customer/reveal
+// POST /customer/reveal
 // ======================================================
 [System.Serializable]
 public class RevealCustomerRequest

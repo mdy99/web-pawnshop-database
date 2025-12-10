@@ -12,7 +12,7 @@ public enum RequestType{
     INIT_CATALOGS,      // GET /catalog/initialData
     DISPLAY_CUR_ALL,    // GET /display/currentAll
     NEWS_CUR,           // GET /news/current
-    CUS_REVEAL,         // PATCH /customer/reveal
+    CUS_REVEAL,         // POST /customer/reveal
     GET_ITEM_HINTS,     // GET /item/getHints
     ITEM_ACTION,        // POST /item/action
     ITEM_RESULT,        // POST /item/result
@@ -80,9 +80,9 @@ public class TransmissionManager : MonoBehaviour
                 routeUrl = "/news/current";
                 StartCoroutine(GetJsonValue<S>(routeUrl, onCompleted));
                 break;
-            case RequestType.CUS_REVEAL: // PATCH /customer/reveal
+            case RequestType.CUS_REVEAL: // POST /customer/reveal
                 routeUrl = "/customer/reveal";
-                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted, true));
+                StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted));
                 break;
             case RequestType.GET_ITEM_HINTS: // GET /item/getHints
                 routeUrl = "/item/getHints";
@@ -149,7 +149,7 @@ public class TransmissionManager : MonoBehaviour
     // 인자로 전달한 파라미터에 결과값 담아서 줄게
     IEnumerator GetJsonValue<S>(string routeUrl, Action<int,S> callback)
     {
-        string jsonUrl = serverUrl+routeUrl; // ex http://local.host/player/register
+        string jsonUrl = serverUrl+routeUrl; // ex http://localhost/player/register
         using(UnityWebRequest req  = UnityWebRequest.Get(jsonUrl)) // 여기서는 그냥 선언만 함
         {
             // 헤더 설정
@@ -185,7 +185,7 @@ public class TransmissionManager : MonoBehaviour
     }
 
     // 전달할 데이터랑 결과값 받을 데이터 인자로 주세요
-    IEnumerator PostJsonValue<T,S>(T requestData, string routeUrl, Action<int,S> callback, bool isPatch = false)
+    IEnumerator PostJsonValue<T,S>(T requestData, string routeUrl, Action<int,S> callback)
     {
         // 보낼 데이터가 없으면 requestData 타입을 int로 설정
         string jsonData = "";
@@ -198,8 +198,8 @@ public class TransmissionManager : MonoBehaviour
         // url 설정
         string url= serverUrl+routeUrl;
         // 보내기 시작
-        using(UnityWebRequest req = new UnityWebRequest(url, isPatch? "PATCH" : "POST"))
-        { // 생성자에서 이걸 보고 판단함. 아니면 아래서 req.method ="PATCH" 이렇게 설정하면 돼
+        using(UnityWebRequest req = new UnityWebRequest(url, "POST"))
+        {
             // json 인코딩
             byte[] jsonToSend = new System.Text.UTF8Encoding().GetBytes(jsonData);
 

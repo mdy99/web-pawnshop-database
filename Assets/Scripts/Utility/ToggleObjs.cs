@@ -17,6 +17,9 @@ public class ToggleObjs : MonoBehaviour
     [SerializeField] private GameObject newsButton;
     [SerializeField] private GameObject newsBlackFilter;
 
+
+
+
     public void ToggleDealSellObjs()
     {
         if(AYellowpaper.SerializedCollections.SingletonManager.Instance.IsCustomerDealState == CustomerState.Deal)
