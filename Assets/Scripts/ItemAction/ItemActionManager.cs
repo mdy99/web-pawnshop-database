@@ -73,9 +73,10 @@ public class ItemActionManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 데이터 <<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/18loanUpdatePersonal");
-                responseData =JsonUtility.FromJson<LoanUpdateResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/18loanUpdatePersonal");
+                // responseData =JsonUtility.FromJson<LoanUpdateResponse>(jsonFile.text);
+                
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
                 {
@@ -86,6 +87,7 @@ public class ItemActionManager : MonoBehaviour
                 {
                     /* 결과 데이터 UI 업데이트하기 */
                     // 돈 업데이트
+                    Debug.Log($"leftmoney: {responseData.leftMoney}");
                     gameSessionManager.SetLeftMoney(responseData.leftMoney);
                     // 가게빚 UI 업데이트
                     UpdateDebtValue(responseData.leftDebtAmount, 0);
@@ -136,9 +138,10 @@ public class ItemActionManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 데이터 <<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/18loanUpdateClearPawnShop");
-                responseData =JsonUtility.FromJson<LoanUpdateResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/18loanUpdateClearPawnShop");
+                // responseData =JsonUtility.FromJson<LoanUpdateResponse>(jsonFile.text);
+                
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
                 {
@@ -149,6 +152,7 @@ public class ItemActionManager : MonoBehaviour
                 {
                     /* 결과 데이터 UI 업데이트하기 */
                     // 돈 업데이트
+                    Debug.Log($"leftmoney: {responseData.leftMoney}");
                     gameSessionManager.SetLeftMoney(responseData.leftMoney);
                     // 가게빚 UI 업데이트
                     UpdateDebtValue(0, responseData.leftDebtAmount);
@@ -285,9 +289,10 @@ public class ItemActionManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트 데이터 <<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/14itemAction");
-                responseData =JsonUtility.FromJson<ItemActionResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/14itemAction");
+                // responseData =JsonUtility.FromJson<ItemActionResponse>(jsonFile.text);
+                
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
                 {

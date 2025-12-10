@@ -55,6 +55,8 @@ public class DealManager : MonoBehaviour
     private SellCompleteRequest currentSellItem=new SellCompleteRequest();
     
     private int currentDealIndex =-1;
+    private bool isDisplayItemsLoaded = false;
+    private bool isDailyDealsLoaded = false;
     
     [SerializeField] private GameObject gradeTogGroup;
     [SerializeField] private GameObject flawTogGroup;
@@ -105,21 +107,37 @@ public class DealManager : MonoBehaviour
 
     private bool isFlawLevelTogClicked = false;
     private bool isGradeTogClicked = false;
+    public void InitDealManager(){
+        StartCoroutine(InitDealCoroutine());
+    }
 
-    void Start()
-    {
+    IEnumerator InitDealCoroutine(){
         // 전시장 아이템 불러오기
+        itemDisplayManager.RequestDisplayedItems();
+        
+        // RequestDisplayedItems 완료될 때까지 대기
+        yield return new WaitUntil(() => isDisplayItemsLoaded);
+        Debug.Log("OnDisplayItemsLoaded!!");
         displaysMap = itemDisplayManager.GetItemDisplayMap();
+        Debug.Log("displayMap Complete");
         StartToday();
     }
+
+    public void OnDisplayItemsLoaded()
+    {
+        isDisplayItemsLoaded = true;
+    }
+
 
     private void StartToday()
     {
         DialogueManager.Instance.PutDialogue("<속마음> 날이 시작된다..");
         // 오늘의 뉴스 이벤트 불러오기
         RequestDailyNews();
+        Debug.Log("StartToday: RequestDailyNews 완료");
         // 오늘 복원/경매 완료 된 것들 불러오기
         RequestDailyCompletedItemAction();
+        Debug.Log("StartToday: RequestDailyCompletedItemAction 완료");
         // 오늘 거래 불러오기
         RequestDailyDeals();
     }
@@ -135,9 +153,9 @@ public class DealManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 코드 <<<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/15itemResult");
-                responseData =JsonUtility.FromJson<ItemActionResultResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/15itemResult");
+                // responseData =JsonUtility.FromJson<ItemActionResultResponse>(jsonFile.text);
                 
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -149,7 +167,7 @@ public class DealManager : MonoBehaviour
                 else
                 {
                     // 경매/복원 완료 된 거 없으면 종료
-                    if(responseData.actionResults == null)
+                    if(responseData.actionResults == null || responseData.actionResults.Count == 0)
                     {
                         return;
                     }
@@ -241,13 +259,16 @@ public class DealManager : MonoBehaviour
 
     IEnumerator PutNewsDialogue(NewsWrapData responseData)
     {
-        for(int i = 0; i < responseData.newsList.Count; ++i)
-        {
-            DialogueManager.Instance.PutDialogue
-            ($"<뉴스> {responseData.newsList[i].affectedCategoryName}의 {SingletonManager.Instance.ConvertToAffectedPrice((AffectedPrice)responseData.newsList[i].affectedPrice)}가 {responseData.newsList[i].amount}%만큼 영향을 받겠습니다.\n");
-            yield return new WaitForSeconds(2.0f);
+        if(responseData != null ){
         }
-        
+        else{
+            yield return new WaitForSeconds(2.0f);
+            for(int i = 0; i < responseData.newsList.Count; ++i)
+            {
+                DialogueManager.Instance.PutDialogue
+                ($"<뉴스> {responseData.newsList[i].affectedCategoryName}의 {SingletonManager.Instance.ConvertToAffectedPrice((AffectedPrice)responseData.newsList[i].affectedPrice)}가 {responseData.newsList[i].amount}%만큼 영향을 받겠습니다.\n");
+            }
+        }
     }
 
     // 오늘의 뉴스 이벤트 불러오기
@@ -260,9 +281,9 @@ public class DealManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 코드 <<<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/7newsCurrent");
-                responseData =JsonUtility.FromJson<NewsWrapData>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/7newsCurrent");
+                // responseData =JsonUtility.FromJson<NewsWrapData>(jsonFile.text);
                 
                 if((ResponseCode)responseCode != ResponseCode.OK)
                 {
@@ -288,9 +309,9 @@ public class DealManager : MonoBehaviour
             (responseCode, responseData) =>
             {                
                 // 테스트용 코드 <<<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/10generateDailyDeals");
-                responseData =JsonUtility.FromJson<DailyDealsWrapData>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/10generateDailyDeals");
+                // responseData =JsonUtility.FromJson<DailyDealsWrapData>(jsonFile.text);
 
                 if((ResponseCode)responseCode != ResponseCode.OK)
                 {
@@ -300,18 +321,31 @@ public class DealManager : MonoBehaviour
                 // 받은 데이터로 오늘 데이터 세팅
                 else
                 {
-                    InitDailyDeals(responseData.dailyDeals);
+                    Debug.Log($"dailyDeals Data{responseData.dailyDeals}");
+                    StartCoroutine(InitDailyDealsCoroutine(responseData.dailyDeals));
                 }
             }
         );
     }
 
-    public void InitDailyDeals(List<DealData> dailyDeals)
+    IEnumerator InitDailyDealsCoroutine(List<DealData> dailyDeals)
     {
+        // 로딩 시작 (필요시 로딩 UI 표시)
+        Debug.Log("거래 데이터 로딩 중...");
+        isDailyDealsLoaded = false;
+        
+        // for문 실행
         for(int i = 0; i < dailyDeals.Count; i++)
         {
             dailyDealsList.Add(dailyDeals[i]);
         }
+        isDailyDealsLoaded = true;
+        
+        // for문이 완전히 끝날 때까지 대기
+        yield return new WaitUntil(() => isDailyDealsLoaded);
+        
+        // 모든 데이터 추가 완료 후 실행
+        Debug.Log("거래 데이터 로딩 완료!");
         currentDealIndex = 0;
         SetDealPanelToNewData(dailyDealsList[currentDealIndex]); // 최초 거래로 설정해둠
     }
@@ -455,9 +489,9 @@ public class DealManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 데이터 <<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_grade");
-                 responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_grade");
+                //  responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
                  // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
                 {
@@ -513,9 +547,9 @@ public class DealManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 데이터 <<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_flaw");
-                responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_flaw");
+                // responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
 
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -562,9 +596,9 @@ public class DealManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 데이터 <<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_auth");
-                responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/11dealAction_auth");
+                // responseData =JsonUtility.FromJson<DealActionResponse>(jsonFile.text);
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
                 {
@@ -617,9 +651,9 @@ public class DealManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 데이터 <<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/9itemHind");
-                responseData =JsonUtility.FromJson<ItemHintResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/9itemHind");
+                // responseData =JsonUtility.FromJson<ItemHintResponse>(jsonFile.text);
 
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -671,9 +705,9 @@ public class DealManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 데이터 <<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/8revealCustomer");
-                responseData =JsonUtility.FromJson<RevealCustomerResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/8revealCustomer");
+                // responseData =JsonUtility.FromJson<RevealCustomerResponse>(jsonFile.text);
 
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -883,9 +917,10 @@ public class DealManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 데이터 사용 <<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/16itemSellStart");
-                responseData =JsonUtility.FromJson<SellStartResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/16itemSellStart");
+                // responseData =JsonUtility.FromJson<SellStartResponse>(jsonFile.text);
+                
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
                 {
@@ -936,9 +971,10 @@ public class DealManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 데이터 사용 <<<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/17sellComplete");
-                responseData =JsonUtility.FromJson<SellCompleteResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/17sellComplete");
+                // responseData =JsonUtility.FromJson<SellCompleteResponse>(jsonFile.text);
+                
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
                 {
@@ -1059,6 +1095,8 @@ public class DealManager : MonoBehaviour
         DealCompleteRequest requestData =  new DealCompleteRequest();
         requestData.itemKey = currentDealData.itemKey;
         requestData.drcKey = currentDealData.drcKey;
+
+        Debug.Log($"current sessionToken: {TransmissionManager.Instance.GetSessionToken()}");
         // 서버에 요청하고 데이터 받아오기
         TransmissionManager.Instance.RequestToServer<DealCompleteRequest,DealCompleteResponse>(
             RequestType.DEAL_COMPLETE,
@@ -1066,10 +1104,15 @@ public class DealManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 데이터 사용
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/12dealComplete");
-                 responseData =JsonUtility.FromJson<DealCompleteResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/12dealComplete");
+                //  responseData =JsonUtility.FromJson<DealCompleteResponse>(jsonFile.text);
+               
                 // 통신 오류 체크
+                // if(responseCode == 1000){
+                //     ConfirmPopuper.Instance.PopupCheckPanel("공간이 부족해요!");
+                // }
+                // else 
                 if((ResponseCode)responseCode != ResponseCode.OK)
                 {
                     string errorMessage = "통신 오류: 거래 결정 요청 실패.";
@@ -1176,9 +1219,10 @@ public class DealManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 데이터 사용
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/12dealCancelLeftDeal");
-                responseData =JsonUtility.FromJson<DealCompleteResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/12dealCancelLeftDeal");
+                // responseData =JsonUtility.FromJson<DealCompleteResponse>(jsonFile.text);
+                
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
                 {

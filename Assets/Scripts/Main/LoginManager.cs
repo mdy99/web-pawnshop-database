@@ -3,6 +3,7 @@ using TMPro;
 using AYellowpaper.SerializedCollections;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System;
 
 public enum LoginState
 {
@@ -32,10 +33,10 @@ public class LoginManager : MonoBehaviour
     private LoginState loginState = LoginState.LOGIN;
 
     private string playerIdCache="";
-    private TMP_Text loginIdTMP;
-    private TMP_Text loginPwTMP;
-    private TMP_Text RegisterIdTMP;
-    private TMP_Text RegisterPwTMP;
+    private TMP_InputField loginIdTMP;
+    private TMP_InputField loginPwTMP;
+    private TMP_InputField RegisterIdTMP;
+    private TMP_InputField RegisterPwTMP;
 
     void Awake()
     {
@@ -62,10 +63,10 @@ public class LoginManager : MonoBehaviour
 
     private void InitLocalVar()
     {
-        loginIdTMP =LoginResisterObjs.transform.GetChild(0).GetChild(1).GetChild(0).GetChild(1).GetComponent<TMP_Text>();
-        loginPwTMP =LoginResisterObjs.transform.GetChild(0).GetChild(3).GetChild(0).GetChild(1).GetComponent<TMP_Text>();
-        RegisterIdTMP =LoginResisterObjs.transform.GetChild(1).GetChild(1).GetChild(0).GetChild(1).GetComponent<TMP_Text>();
-        RegisterPwTMP =LoginResisterObjs.transform.GetChild(1).GetChild(3).GetChild(0).GetChild(1).GetComponent<TMP_Text>();
+        loginIdTMP =LoginResisterObjs.transform.GetChild(0).GetChild(1).GetComponent<TMP_InputField>();
+        loginPwTMP =LoginResisterObjs.transform.GetChild(0).GetChild(3).GetComponent<TMP_InputField>();
+        RegisterIdTMP =LoginResisterObjs.transform.GetChild(1).GetChild(1).GetComponent<TMP_InputField>();
+        RegisterPwTMP =LoginResisterObjs.transform.GetChild(1).GetChild(3).GetComponent<TMP_InputField>();
     }
 
     public void RequestToLogOut(){
@@ -75,16 +76,16 @@ public class LoginManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 확인용 코드 <<<<<<<<<<<<<<
-                responseCode = 200;
+                // responseCode = 200;
 
                 if((ResponseCode)responseCode == ResponseCode.OK)
                 {
-                    // 로그인 초기화
-                    playerIdCache =""; // 캐시 초기화
-                    loginIdTMP.text = "";
-                    loginPwTMP.text = "";
-                    RegisterIdTMP.text = "";
-                    RegisterPwTMP.text = "";
+                    // // 로그인 초기화
+                    // playerIdCache =""; // 캐시 초기화
+                    // loginIdTMP.text = "";
+                    // loginPwTMP.text = "";
+                    // RegisterIdTMP.text = "";
+                    // RegisterPwTMP.text = "";
                     // 트랜스미션에 세션토큰 전달
                     TransmissionManager.Instance.SetSessionToken(""); // 초기화
 
@@ -109,6 +110,8 @@ public class LoginManager : MonoBehaviour
     {
         // 요청 데이터 전달
         PlayerRegisterLoginRequest requestData = new PlayerRegisterLoginRequest();
+        // requestData.playerId = loginIdTMP.text.Substring(0,loginIdTMP.text.Length-1);
+        // requestData.password = loginPwTMP.text.Substring(0,loginPwTMP.text.Length-1);
         requestData.playerId = loginIdTMP.text;
         requestData.password = loginPwTMP.text;
         // 서버 요청 코루틴 실행
@@ -117,10 +120,10 @@ public class LoginManager : MonoBehaviour
             requestData,
             (responseCode, responseData) => // 서버 요청 코루틴 끝나면 해당 람다 콜백 함수 실행 됨
             {
-                // 테스트 데이터 <<<<<<<<<<<<<
-                responseData= new LoginResponse(); //
-                responseData.sessionToken = "ang Kimoti"; // <<<<<<<< 확인용 코드
-                responseData.hasGameSession = "Y"; // 기존 게임 불러오기, "N"이면 새 게임 생성에 쓸 변수임
+                // // 테스트 데이터 <<<<<<<<<<<<<
+                // responseData= new LoginResponse(); //
+                // responseData.sessionToken = "ang Kimoti"; // <<<<<<<< 확인용 코드
+                // responseData.hasGameSession = "Y"; // 기존 게임 불러오기, "N"이면 새 게임 생성에 쓸 변수임
 
                 if(responseData != default)
                 {
@@ -238,7 +241,7 @@ public class LoginManager : MonoBehaviour
             requestData,
             (responseCode, responseData) =>
             {
-                responseCode =200; // <<<<<<<<<<<<<<< 확인용 코드
+                // responseCode =200; // <<<<<<<<<<<<<<< 확인용 코드
                 if(responseCode == 200)
                 {
                     loginState =LoginState.IN_LOGIN;
@@ -269,9 +272,9 @@ public class LoginManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트 데이터 <<<<<<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/20worldRecords");
-                responseData =JsonUtility.FromJson<WorldRecordResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/20worldRecords");
+                // responseData =JsonUtility.FromJson<WorldRecordResponse>(jsonFile.text);
 
                 // 오류 확인
                 if((ResponseCode)responseCode != ResponseCode.OK)

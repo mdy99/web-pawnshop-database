@@ -3,6 +3,7 @@ using AYellowpaper.SerializedCollections;
 using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameSessionManager : MonoBehaviour
 {
@@ -18,8 +19,8 @@ public class GameSessionManager : MonoBehaviour
 
     [Header("연결용")]
     [SerializeField] private GameObject nickAndShopPanel;
-    [SerializeField] private TMP_Text nickNameInput;
-    [SerializeField] private TMP_Text shopNameInput;
+    [SerializeField] private TMP_InputField nickNameInput;
+    [SerializeField] private TMP_InputField shopNameInput;
     
     [SerializeField] private TMP_Text nickShopDayCountOutput;
     [SerializeField] private TMP_Text goldOutput;
@@ -30,6 +31,8 @@ public class GameSessionManager : MonoBehaviour
 
     [SerializeField] private GameObject notFoundItemListObjs;
     [SerializeField] private GameObject notFoundRowPrefab;
+
+    [SerializeField] private DealManager dealManager;
 
     public void PopupNotFoundItemListObjs(List<string> notFoundCategoryList)
     {
@@ -93,10 +96,22 @@ public class GameSessionManager : MonoBehaviour
     }
 
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start() // 시작할 때 게임 세션 받아오기
+    void OnEnable()
     {
-        RequestForGameSession();
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDisable()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name == "MainGameScene")
+        {
+            RequestForGameSession();
+        }
     }
 
     private void RequestForGameSession()
@@ -149,11 +164,11 @@ public class GameSessionManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 데이터 사용 <<<<<<<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/3newGameSession");
-                responseData =JsonUtility.FromJson<GameSessionData>(jsonFile.text);
-                responseData.nickname = nickNameInput.text;
-                responseData.shopName = shopNameInput.text;
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/3newGameSession");
+                // responseData =JsonUtility.FromJson<GameSessionData>(jsonFile.text);
+                // responseData.nickname = nickNameInput.text;
+                // responseData.shopName = shopNameInput.text;
 
                  // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
@@ -163,10 +178,12 @@ public class GameSessionManager : MonoBehaviour
                 }
                 else
                 {
+                    Debug.Log(responseData);
                     // 받아온 데이터로 업데이트 하기
                     SetUIData(responseData);
                     // 이제 닉 받는 패널 끄기
                     nickAndShopPanel.SetActive(false);                     
+                    dealManager.InitDealManager();
                 }
             }
         );
@@ -182,9 +199,10 @@ public class GameSessionManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 데이터 사용 <<<<<<<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/4latestGameSession");
-                responseData =JsonUtility.FromJson<GameSessionData>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/4latestGameSession");
+                // responseData =JsonUtility.FromJson<GameSessionData>(jsonFile.text);
+                
                  // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
                 {
@@ -193,8 +211,10 @@ public class GameSessionManager : MonoBehaviour
                 }
                 else
                 {
+                    Debug.Log(responseData);
                     // 받은 데이터로 보이는 것들 세팅       
                     SetUIData(responseData);                    
+                    dealManager.InitDealManager();
                 }                
             }
         );

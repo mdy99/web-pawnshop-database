@@ -65,9 +65,9 @@ public class SingletonManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트용 코드 <<<<<<<<<<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/5initialCatalog");
-                responseData =JsonUtility.FromJson<InitialCatalogResponse>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/5initialCatalog");
+                // responseData =JsonUtility.FromJson<InitialCatalogResponse>(jsonFile.text);
                 
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)

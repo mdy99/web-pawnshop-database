@@ -46,14 +46,6 @@ public class DialogueManager : MonoBehaviour
         }
     }
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        // StartCoroutine(TestPutMessage(testMessage1,3f));
-        // StartCoroutine(TestPutMessage(testMessage2,1f));
-        // StartCoroutine(TestPutMessage(testMessage3,5f));
-    }
-
     public void PutDialogue(string newDialogue){
         if (middleDialogue.GetText()!=""){
             if(!upperDialogue.getIsActive()) upperDialogue.SetEnable(true);

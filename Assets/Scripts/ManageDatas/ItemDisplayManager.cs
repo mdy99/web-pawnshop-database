@@ -15,10 +15,11 @@ public class ItemDisplayManager : MonoBehaviour
     public SerializedDictionary<int, DisplayedItemData> itemDisplayMap = new SerializedDictionary<int, DisplayedItemData>();
     // 전시 위치 별 아이템 정보 매핑
     [SerializeField] ItemActionManager itemActionManager;
+    [SerializeField] DealManager dealManager;
 
     private ItemCatalogData iData;
-    void Start()
-    {
+
+    public void RequestDisplayedItems(){
         // 실제 데이터 요청
         TransmissionManager.Instance.RequestToServer<int, ItemDisplaysWrapData>(
             RequestType.DISPLAY_CUR_ALL,
@@ -26,9 +27,10 @@ public class ItemDisplayManager : MonoBehaviour
             (responseCode, responseData) =>
             {
                 // 테스트 데이터 <<<<<<<<<<<<<<<<<<<<<<<<
-                responseCode = 200;
-                TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/6displayItemAll");
-                responseData =JsonUtility.FromJson<ItemDisplaysWrapData>(jsonFile.text);
+                // responseCode = 200;
+                // TextAsset jsonFile = Resources.Load<TextAsset>("Mocks/6displayItemAll");
+                // responseData =JsonUtility.FromJson<ItemDisplaysWrapData>(jsonFile.text);
+             
                 // 통신 오류 체크
                 if((ResponseCode)responseCode != ResponseCode.OK)
                 {
@@ -37,11 +39,13 @@ public class ItemDisplayManager : MonoBehaviour
                 }
                 else
                 {
+                    for(int i=0;i<responseData.displays.Count;++i){
+                        Debug.Log(responseData.displays[i].displayPositionKey);
+                    }
                     InitDisplayedItem(responseData.displays);        
                 }
             }
         );
-
     }
 
     public void InitDisplayedItem(List<DisplayedItemData> displays)
@@ -60,6 +64,12 @@ public class ItemDisplayManager : MonoBehaviour
             }
         }
         itemActionManager.OnItemActionTogClicked(true);
+        
+        // DealManager에 로딩 완료 알림
+        if(dealManager   != null)
+        {
+            dealManager.OnDisplayItemsLoaded();
+        }
     }
 
     public void SetItemState(int posKey,ItemState itemState)

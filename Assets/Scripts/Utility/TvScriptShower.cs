@@ -3,27 +3,30 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using AYellowpaper.SerializedCollections;
+using System.Collections;
 
 public class TvScriptShower : MonoBehaviour
 {
-    [SerializeField] private TMP_Text textDescription;
-    [SerializeField] private TMP_Text textEffect;
-    
-
+    [SerializeField] private SlidingText textDescription;
+    [SerializeField] private SlidingText textEffect;
 
     public void SetTvText(List<NewsData> newsDatas)
     {
+        Debug.Log(newsDatas);
         string textDesc="";
         string textEff="";
-        for(int i = 0; i < newsDatas.Count; i++)
-        {
-            textDesc = textDesc + "       "+ newsDatas[i].newsDescription;
-            textEff=textEff+"       "+newsDatas[i].affectedCategoryName
-                            +SingletonManager.Instance.ConvertToAffectedPrice((AffectedPrice)newsDatas[i].affectedPrice)
-                            +newsDatas[i].amount+"%";   
+        if(newsDatas != null && newsDatas.Count > 0){
+            List<NewsData> news = new List<NewsData>(newsDatas);
+            for(int i = 0; i < news.Count; i++)
+            {
+                textDesc = textDesc + "       "+ news[i].newsDescription;
+                textEff=textEff+"       "+news[i].affectedCategoryName
+                                +SingletonManager.Instance.ConvertToAffectedPrice((AffectedPrice)newsDatas[i].affectedPrice)
+                                +news[i].amount+"%";   
+            }
         }
-        textDescription.GetComponent<SlidingText>().SetFullText(textDesc);
-        textEffect.GetComponent<SlidingText>().SetFullText(textEff);
+        textDescription.SetFullText(textDesc);
+        textEffect.SetFullText(textEff);   
     }
 
 }

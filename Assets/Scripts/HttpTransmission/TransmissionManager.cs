@@ -31,7 +31,7 @@ public class TransmissionManager : MonoBehaviour
 {
     private static TransmissionManager instance = null; // 얘 싱글톤임
 
-    public static readonly string serverUrl = "http://localhost:8080"; // 서버 URL
+    public static readonly string serverUrl = "/Phase4"; // 서버 URL
     public static string sessionToken = ""; // 세션 토큰 저장
     
     [SerializeField] private LoginManager loginManager;
@@ -39,6 +39,10 @@ public class TransmissionManager : MonoBehaviour
     public void SetSessionToken(string sessionTokStr)
     {
         sessionToken = sessionTokStr;
+    }
+    public string GetSessionToken()
+    {
+        return sessionToken;
     }
 
     public void RequestToServer<T,S>(
@@ -84,9 +88,9 @@ public class TransmissionManager : MonoBehaviour
                 routeUrl = "/customer/reveal";
                 StartCoroutine(PostJsonValue<T,S>(requestData,routeUrl, onCompleted));
                 break;
-            case RequestType.GET_ITEM_HINTS: // GET /item/getHints
+            case RequestType.GET_ITEM_HINTS: // POST /item/getHints
                 routeUrl = "/item/getHints";
-                StartCoroutine(GetJsonValue<S>(routeUrl, onCompleted));
+                StartCoroutine(PostJsonValue<T,S>(requestData, routeUrl, onCompleted));
                 break;
             case RequestType.ITEM_ACTION: // POST /item/action
                 routeUrl = "/item/action";
@@ -164,13 +168,18 @@ public class TransmissionManager : MonoBehaviour
             // 결과 응답 코드 확인
             int resCode = (int)req.responseCode;
             // 결과 처리
-            if(req.result != UnityWebRequest.Result.Success) // 에러 발생
+            if(resCode != 200) // 에러 발생
             {
-                Debug.LogError("its failed to fetch Json Data");
+                Debug.LogError(
+                    $"its failed to fetch Json Data (Code: {resCode} URL: {routeUrl})\n"
+                    + $"Response: {req.downloadHandler.text}"
+                );
                 callback(resCode, default);
             }
             else // 성공 시
             {
+                Debug.Log($"Request success {routeUrl}\n"
+                    + $"Response: {req.downloadHandler.text}");
                 // 결과를 담기
                 string jsonVal = req.downloadHandler.text;
                 S resData = default;
@@ -218,13 +227,36 @@ public class TransmissionManager : MonoBehaviour
 
             int resCode = (int)req.responseCode;
             // 결과 처리
-            if(req.result != UnityWebRequest.Result.Success) // 에러 발생
+            // if(req.result != UnityWebRequest.Result.Success) // 에러 발생
+            // if(resCode == 400)
+            // {
+            //     string jsonVal = req.downloadHandler.text;
+            //     ErrorResponse resData = default;
+            //     if (!string.IsNullOrEmpty(jsonVal))
+            //     {
+            //         resData = JsonUtility.FromJson<ErrorResponse>(jsonVal);
+            //         if(resData.error == "No left space in display")
+            //         {
+            //             resCode = 1000;
+            //             callback(resCode, default);
+            //         }
+            //     }
+            //     // 결과값 담아서 주기
+            // }
+            // else 
+            if(resCode != 200) // 에러 발생
             {
-                Debug.LogError("its failed to fetch Json Data");
+                Debug.LogError(
+                    $"its failed to fetch Json Data (Code: {resCode} URL: {routeUrl})\n"
+                    + $"Request: {jsonData}\n"
+                    + $"Response: {req.downloadHandler.text}"
+                );
                 callback(resCode, default);
             }
             else // 성공 시
             {
+                Debug.Log($"Request success {routeUrl}\n"
+                    + $"Response: {req.downloadHandler.text}");
                 // 결과를 담기
                 string jsonVal = req.downloadHandler.text;
                 S resData = default;

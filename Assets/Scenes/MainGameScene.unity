@@ -13558,8 +13558,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8218a0d21af2591469cd3118c01d5812, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TvScriptShower
-  textDescription: {fileID: 1484227864}
-  textEffect: {fileID: 884259178}
+  textDescription: {fileID: 1484227866}
+  textEffect: {fileID: 884259180}
 --- !u!1 &575196198
 GameObject:
   m_ObjectHideFlags: 0
@@ -27161,8 +27161,8 @@ MonoBehaviour:
   nickname: 
   shopName: 
   nickAndShopPanel: {fileID: 2126206878}
-  nickNameInput: {fileID: 301112345}
-  shopNameInput: {fileID: 599528337}
+  nickNameInput: {fileID: 129898315}
+  shopNameInput: {fileID: 1981622812}
   nickShopDayCountOutput: {fileID: 415161890}
   goldOutput: {fileID: 880046109}
   personalDebtOutput: {fileID: 590986856}
@@ -27171,6 +27171,7 @@ MonoBehaviour:
   GameEndObjs: {fileID: 1195569493}
   notFoundItemListObjs: {fileID: 1154775063}
   notFoundRowPrefab: {fileID: 6278486249978418075, guid: 0d34e21bf99c5114aaef752a08e28e5c, type: 3}
+  dealManager: {fileID: 1873607934}
 --- !u!4 &1397915743
 Transform:
   m_ObjectHideFlags: 0
@@ -33956,6 +33957,7 @@ MonoBehaviour:
   itemDisplayMap:
     _serializedList: []
   itemActionManager: {fileID: 449805074}
+  dealManager: {fileID: 1873607934}
 --- !u!4 &1766135789
 Transform:
   m_ObjectHideFlags: 0
